@@ -1,4 +1,18 @@
-build/*
-install/*
-log/*
-site/*
+# ROS 2 build artifacts (colcon root = repo root)
+build/
+install/
+log/
+site/
+
+# Personal Claude Code notes
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Videos (upload elsewhere, link in docs/VIDEOS.md)
+*.mp4
+*.avi
+*.mkv
+
+# Python
+__pycache__/
+*.pyc

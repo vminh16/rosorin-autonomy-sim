@@ -1,215 +1,159 @@
-# VSCode ROS2 Workspace Template
+# ROSOrin Autonomy Sim
 
-This template will get you set up using ROS2 with VSCode as your IDE.
+Simulation stack for the **Hiwonder ROSOrin Pro** mecanum-wheel robot: Ignition Gazebo (Fortress) simulation,
+LiDAR-based SLAM, and autonomous navigation with Nav2 — single-goal and multi-waypoint missions with per-run logging.
 
-The development environment is set up using a VSCode devcontainer, and the same configuration is also used in CI.
+Built on ROS 2 Humble, Ubuntu 22.04, running under WSL2 with WSLg.
+
+![ROSOrin Pro in the robocup_home world](docs/images/gazebo_robocup_home.png)
 
 ## Features
 
-### Development environment
+- **Simulation** — ROSOrin Pro (mecanum drive, 2D LiDAR, depth camera) in a furnished house world; teleop via `/cmd_vel`.
+- **Mapping** — 2D SLAM with `slam_toolbox`; maps saved as `.pgm` + `.yaml`.
+- **Localization & navigation** — AMCL + Nav2 on a saved map; goals from RViz or from code.
+- **Multi-waypoint missions** — `rosorin_navigation` node built on `nav2_simple_commander`, waypoints loaded from YAML,
+  each run logged to CSV (start/end time, result, distance) for success-rate and timing analysis. *(in progress)*
 
-The devcontainer uses the Microsoft Ubuntu devcontainer image along with the ROS2 devcontainer feature.
+## Architecture
 
-If you want to change which version of ROS you're using, update the ROS2 feature in `.devcontainer/devcontainer.json`:
-
-```jsonc id="vozthd"
-"ghcr.io/althack/devcontainers/ros2:0": {
-  "distro": "lyrical",
-  "package": "desktop"
-}
+```
+ Ignition Gazebo (robot + world)
+   │  ign topics ──► ros_gz_bridge ──► /scan /odom /tf /joint_states /clock /depth_cam/*
+   ▲
+   │ /controller/cmd_vel (bridged from ROS /cmd_vel)
+   │
+ teleop / Nav2 controller ◄── Nav2 (AMCL, planner, controller, costmaps) ◄── rosorin_navigation (waypoints)
+                                    ▲
+ SLAM (slam_toolbox) ── map→odom ───┘──► maps/<name>.yaml
 ```
 
-This is also the ROS version used in CI, so you only need to change it in one place.
+## Repository layout
 
-### Style
-
-ROS2-approved formatters are included in the IDE.
-
-* **c++** uncrustify; config from `ament_uncrustify`
-* **python** autopep8; vscode settings consistent with the [style guide](https://docs.ros.org/en/lyrical/The-ROS2-Project/Contributing/Code-Style-Language-Versions.html)
-
-### Tasks
-
-There are many pre-defined tasks, see [`.vscode/tasks.json`](.vscode/tasks.json) for a complete listing. Feel free to adjust them to suit your needs.
-
-Take a look at [how I develop using tasks](https://www.allisonthackston.com/articles/vscode_tasks.html) for an idea of how I use tasks in my development.
-
-### Debugging
-
-This template sets up debugging for python files, gdb for cpp programs, and ROS launch files.
-
-See [`.vscode/launch.json`](.vscode/launch.json) for configuration details.
-
-### Continuous Integration
-
-The template also comes with basic continuous integration set up. See [`.github/workflows/ros.yaml`](.github/workflows/ros.yaml).
-
-The build, test, and lint jobs run using the same devcontainer configuration used for development. This means changing the ROS distro in `.devcontainer/devcontainer.json` also changes the version used by CI.
-
-To remove a linter, just delete its name from the matrix:
-
-```yaml id="nxevf7"
-matrix:
-  linter:
-    - cppcheck
-    - cpplint
-    - uncrustify
-    - lint_cmake
-    - xmllint
-    - flake8
-    - pep257
+```
+src/
+  simulations/             # Hiwonder ROSOrin Pro sim, imported unmodified (robot_gazebo, rosorin_description)
+  rosorin_navigation/      # our package: fixed launch files, RViz configs, navigation scripts
+    launch/sim.launch.py   #   Gazebo + robot + ROS bridge (fixed copy of Hiwonder launches)
+    launch/slam.launch.py  #   slam_toolbox + RViz with sim time
+    rviz/nav2_clean.rviz   #   Nav2 view with robot model on, particle cloud off
+.typerc                    # Hiwonder robot config (LiDAR / camera / chassis type), kept for reference
+maps/                      # saved maps
+results/nav_runs/          # navigation run logs (CSV)
+docs/                      # ENVIRONMENT, DEBUG_LOG, PLAN, DELIVERABLES, images
+CHANGELOGS.md
 ```
 
-## How to use this template
+Upstream Hiwonder packages are never edited in place. Bugs in them are fixed in copies inside `rosorin_navigation`
+(see the header of each launch file and [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md)).
 
-### Prerequisites
+## Requirements
 
-You should already have Docker and VSCode with the Dev Containers extension installed on your system.
+- Ubuntu 22.04 (native or WSL2 distro `Ubuntu-22.04`)
+- ROS 2 Humble desktop, Nav2, slam_toolbox, ros_gz / ros_ign, ign_ros2_control, ros2_control
+- A discrete GPU is strongly recommended under WSL2
 
-* [docker](https://docs.docker.com/engine/install/)
-* [vscode](https://code.visualstudio.com/)
-* [vscode dev containers extension](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers)
+Full step-by-step installation: [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md).
 
-If you're using Windows, I recommend using WSL2 and opening the repository from your WSL distro before reopening it in the container.
+## Build
 
-### Get the template
-
-Click on **Use this template**.
-
-![template_use](https://user-images.githubusercontent.com/6098197/91331899-43f23b80-e780-11ea-92c8-b4665ce126f1.png)
-
-### Create your repository
-
-On the next dialog, name the repository you would like to start and choose its visibility.
-
-![template_new](https://user-images.githubusercontent.com/6098197/91332035-713ee980-e780-11ea-81d3-13b170f568b0.png)
-
-Github will then create a new repository with the contents of this one in your account. It grabs the latest changes as the initial commit.
-
-### Clone your repo
-
-Now you can clone your repo as normal.
-
-![template_download](https://user-images.githubusercontent.com/6098197/91332342-e4e0f680-e780-11ea-9525-49b0afa0e4bb.png)
-
-### Open it in vscode
-
-Now that you've cloned your repo onto your computer, open it in VSCode (`File -> Open Folder`).
-
-When you open it for the first time, you should see a popup asking if you would like to reopen it in a container. Say yes!
-
-![template_vscode](https://user-images.githubusercontent.com/6098197/91332551-36898100-e781-11ea-9080-729964373719.png)
-
-If you don't see the popup, open the command palette and select:
-
-```text id="fipghb"
-Dev Containers: Reopen in Container
+```bash
+git clone https://github.com/vminh16/rosorin-autonomy-sim.git ~/research/rosorin-autonomy-sim
+cd ~/research/rosorin-autonomy-sim
+source /opt/ros/humble/setup.bash
+rosdep install --from-paths src --ignore-src -y --rosdistro humble
+colcon build --symlink-install
 ```
 
-VSCode will set up the container from `.devcontainer/devcontainer.json`, install ROS2 and the configured development tools, and install the recommended VSCode extensions.
+## Usage
 
-Once that's finished, open a terminal inside VSCode and you're ready to go.
+Open one terminal per stage and in each run `source /opt/ros/humble/setup.bash && source install/setup.bash`
+from the repo root. Start a stage only after the previous one is up.
 
-## Update the template with your code
+**0. Clean up leftovers from a previous run** (a stale simulator makes the new robot fail to spawn):
 
-1. Specify the repositories you want to include in your workspace in `src/ros2.repos`, or delete `src/ros2.repos` and develop directly within the workspace.
-2. If you are using a `ros2.repos` file, import the contents with `Terminal -> Run Task... -> import from workspace file`.
-3. Install dependencies with `Terminal -> Run Task... -> install dependencies`.
-4. Adjust the scripts to your liking. These scripts are used both within tasks and CI.
-
-   * `setup.sh` - setup commands for your code. By default this imports the workspace and installs dependencies.
-   * `build.sh` - build commands for your code. By default this uses `--merge-install` and `--symlink-install`.
-   * `test.sh` - test commands for your code.
-5. Develop!
-
-## Changing the ROS distro
-
-The ROS distro is selected by the ROS2 feature in `.devcontainer/devcontainer.json`:
-
-```jsonc id="si9pp5"
-"ghcr.io/althack/devcontainers/ros2:0": {
-  "distro": "lyrical",
-  "package": "desktop"
-}
+```bash
+pkill -f "ign gazebo"; pkill -x rviz2; pkill -f slam_toolbox
 ```
 
-Change `distro` to the version you want to use and rebuild the container.
+**1. Simulation** — Gazebo window opens, robot spawns at the house centre:
 
-Since CI uses the same devcontainer configuration, you don't need to update the ROS distro anywhere else.
-
-## GUI applications
-
-### Windows / WSL2
-
-If you're using Windows, open the repository from your WSL2 distro and then reopen it in the devcontainer.
-
-Current versions of VSCode Dev Containers and WSLg handle the display forwarding for you, so you shouldn't need to manually configure `DISPLAY`, Wayland, PulseAudio, or `/mnt/wslg` mounts.
-
-### Linux / X11
-
-If you're using native Linux with X11, uncomment the X11 forwarding feature in `.devcontainer/devcontainer.json`:
-
-```jsonc id="mxugk2"
-"ghcr.io/althack/devcontainers/linux-x11-forwarding:0": {},
+```bash
+ros2 launch rosorin_navigation sim.launch.py                 # furnished house (default)
+ros2 launch rosorin_navigation sim.launch.py world:=empty    # empty world
 ```
 
-Some GUI applications may also need the container to share the host IPC namespace. If you run into rendering problems, try uncommenting:
+**2. Teleop** — drive the robot (`i` forward, `j`/`l` turn, `k` stop; mecanum strafe with `Shift+J`/`Shift+L`):
 
-```jsonc id="9b5wt2"
-"--ipc=host"
+```bash
+ros2 run teleop_twist_keyboard teleop_twist_keyboard
 ```
 
-in `runArgs`.
+**3. Check the LiDAR**:
 
-## NVIDIA / CUDA
-
-CUDA support is optional.
-
-If you want to use CUDA, uncomment the NVIDIA CUDA feature in `.devcontainer/devcontainer.json`:
-
-```jsonc id="w72s2s"
-"ghcr.io/devcontainers/features/nvidia-cuda:3": {
-  "installToolkit": true
-}
+```bash
+ros2 topic hz /scan
 ```
 
-and allow the container to access the host GPU:
+**4. SLAM** — opens RViz with the growing map; drive slowly around the house with teleop:
 
-```jsonc id="xa78sc"
-"--gpus",
-"all"
+```bash
+ros2 launch rosorin_navigation slam.launch.py
 ```
 
-You'll also need working NVIDIA drivers and the NVIDIA Container Toolkit installed on the host.
+**5. Save the map**:
 
-See the [NVIDIA Container Toolkit installation guide](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/latest/install-guide.html) for setup instructions.
-
-I don't test all of the possible NVIDIA/CUDA host configurations, so your mileage may vary here.
-
-## Repos are not showing up in VS Code source control
-
-VSCode doesn't necessarily know about repositories you've imported underneath the workspace.
-
-You can add them directly using:
-
-```text id="jwb7ls"
-File -> Add Folder To Workspace
+```bash
+mkdir -p maps && ros2 run nav2_map_server map_saver_cli -f maps/house --ros-args -p use_sim_time:=true
 ```
 
-![Screenshot-26](https://github.com/althack/vscode_ros2_workspace/assets/6098197/d8711320-2c16-463b-9d67-5bd9314acc7f)
+**6. Navigation** *(being ported — see `COMMANDS.md` for the verified version once done)*.
 
-Or you can add them as git submodules.
+Exact verified commands, with dates, are kept in [`COMMANDS.md`](COMMANDS.md).
 
-![Screenshot-27](https://github.com/althack/vscode_ros2_workspace/assets/6098197/8ebc9aac-9d70-4b53-aa52-9b5b108dc935)
+### Waypoint file *(planned format)*
 
-To add all of the repos in your `*.repos` file as submodules, run:
-
-```bash id="1pnpb2"
-python3 .devcontainer/repos_to_submodules.py
+```yaml
+# src/rosorin_navigation/config/waypoints.yaml — poses in the `map` frame
+waypoints:
+  - {x: 1.0, y: 0.0, yaw: 0.0}
+  - {x: 1.0, y: 1.5, yaw: 1.57}
 ```
 
-or run the task titled:
+## Results
 
-```text id="7do355"
-add submodules from .repos
-```
+| Metric | Value |
+|---|---|
+| Gazebo Real Time Factor, robocup_home (WSL2, RTX 2050) | 0.7 – 0.95 |
+| `/scan` rate in sim time (configured 10 Hz) | ~5.5 Hz wall clock |
+| RViz frame rate during SLAM | ~31 fps |
+| Waypoint success rate | _pending_ |
+| Mean time per waypoint | _pending_ |
+
+| Gazebo close-up | SLAM in RViz |
+|---|---|
+| ![robot](docs/images/gazebo_rosorin_closeup.png) | ![slam](docs/images/rviz_slam.png) |
+
+Demo video: _pending_.
+
+## Troubleshooting
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| Furniture renders solid black | ogre2 on WSL2 D3D12 Mesa | `sim.launch.py` uses `gui_render_engine:=ogre` (default) |
+| Gazebo aborts with `OGRE EXCEPTION ... GL3PlusTextureGpu::copyTo` | Mesa D3D12 reports OpenGL 4.2 | `sim.launch.py` sets `MESA_GL_VERSION_OVERRIDE=4.5` |
+| `package 'holonomic_sim' not found` | Hiwonder `worlds.launch.py` / `room_worlds.launch.py` bug | use `rosorin_navigation sim.launch.py` |
+| Map jumps / TF warnings with SLAM or AMCL | Hiwonder bridge always publishes static `map→odom` | off by default in `sim.launch.py` |
+| RViz looks smeared while driving (Nav2 view) | AMCL particle cloud redrawn every frame, robot model hidden | `rviz2 -d src/rosorin_navigation/rviz/nav2_clean.rviz --ros-args -p use_sim_time:=true` |
+
+Full history of issues and fixes: [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md). Release notes: [`CHANGELOGS.md`](CHANGELOGS.md).
+
+## Acknowledgements
+
+- [Hiwonder ROSOrin Pro documentation](https://wiki.hiwonder.com/projects/rosorin-pro/en/latest/) — robot model and simulation packages
+- [Nav2](https://docs.nav2.org/) and `nav2_simple_commander` examples
+- [athackst/vscode_ros2_workspace](https://github.com/athackst/vscode_ros2_workspace) — workspace template
+
+## License
+
+Own code: see [`LICENSE`](LICENSE). `src/simulations/` is © Hiwonder, redistributed as published on their wiki.

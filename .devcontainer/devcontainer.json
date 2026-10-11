@@ -9,7 +9,7 @@
 		// For GUI applications on native Linux using X11, uncomment this feature.
 		// "ghcr.io/althack/devcontainers/linux-x11-forwarding:0": {},
 		"ghcr.io/althack/devcontainers/ros2:0": {
-			"distro": "lyrical",
+			"distro": "humble",
 			"package": "desktop"
 		}
 	},
