@@ -8,7 +8,19 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 ### Planned
 - Port Nav2 bringup (`robot_gazebo/launch/include/navigation.launch.py`) to `rosorin_navigation`.
 - Multi-waypoint follower based on `nav2_simple_commander`, CSV logging to `results/nav_runs/`.
-- Improve Real Time Factor of the ROSOrin simulation (ISSUE-012).
+
+## [0.3.0] — 2026-10-12 — Smooth rendering and real-time simulation
+
+### Changed
+- Furniture in `robocup_home` is spawned by `sim.launch.py` as **static** models (same positions as upstream
+  `spawn_objects.launch.py`). Real Time Factor 0.50 → 1.00 (ISSUE-012).
+- `robocup_home` now loads `rosorin_navigation/worlds/robocup_home.sdf`: physics step 30 ms → 10 ms,
+  so the robot pose updates 100×/s instead of 33×/s. `/odom` 20 → 50 Hz, `/scan` 5 → 10 Hz.
+- RViz configs (`slam.rviz` copy, `nav2_clean.rviz`) render at 60 fps instead of 30 (measured 57 fps).
+- `slam.launch.py` uses `rosorin_navigation/rviz/slam.rviz`.
+
+### Added
+- `sim.launch.py` arguments: `furniture`, `camera`, `gui`, `world_file`, `robot_xacro`.
 
 ## [0.2.0] — 2026-10-12 — ROSOrin Pro simulation
 
@@ -32,7 +44,7 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 
 ### Known issues
 - IMU publishes no data: upstream URDF never includes the IMU sensor (ISSUE-011).
-- Real Time Factor 0.7–0.95 in `robocup_home` (ISSUE-012).
+- Real Time Factor 0.7–0.95 in `robocup_home` (ISSUE-012) — fixed in 0.3.0.
 - Teleop by keyboard, map saving and Nav2 on ROSOrin not yet verified.
 
 ## [0.1.0] — 2026-10-12 — Workspace and environment

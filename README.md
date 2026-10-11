@@ -36,7 +36,9 @@ src/
   rosorin_navigation/      # our package: fixed launch files, RViz configs, navigation scripts
     launch/sim.launch.py   #   Gazebo + robot + ROS bridge (fixed copy of Hiwonder launches)
     launch/slam.launch.py  #   slam_toolbox + RViz with sim time
-    rviz/nav2_clean.rviz   #   Nav2 view with robot model on, particle cloud off
+    worlds/robocup_home.sdf#   house world, 10 ms physics step
+    rviz/slam.rviz         #   SLAM view, 60 fps
+    rviz/nav2_clean.rviz   #   Nav2 view with robot model on, particle cloud off, 60 fps
 .typerc                    # Hiwonder robot config (LiDAR / camera / chassis type), kept for reference
 maps/                      # saved maps
 results/nav_runs/          # navigation run logs (CSV)
@@ -83,6 +85,9 @@ ros2 launch rosorin_navigation sim.launch.py                 # furnished house (
 ros2 launch rosorin_navigation sim.launch.py world:=empty    # empty world
 ```
 
+Useful arguments: `furniture:=false` (walls only), `camera:=false` (do not bridge the RGB camera),
+`gui:=false` (server only), `x:= y:= yaw:=` (spawn pose).
+
 **2. Teleop** — drive the robot (`i` forward, `j`/`l` turn, `k` stop; mecanum strafe with `Shift+J`/`Shift+L`):
 
 ```bash
@@ -124,9 +129,10 @@ waypoints:
 
 | Metric | Value |
 |---|---|
-| Gazebo Real Time Factor, robocup_home (WSL2, RTX 2050) | 0.7 – 0.95 |
-| `/scan` rate in sim time (configured 10 Hz) | ~5.5 Hz wall clock |
-| RViz frame rate during SLAM | ~31 fps |
+| Gazebo Real Time Factor, robocup_home + SLAM + RViz (WSL2, RTX 2050) | 1.00 (was 0.50 with upstream launch) |
+| `/scan` / `/odom` / camera rate | 10 Hz / 50 Hz / 27.6 Hz |
+| Physics step | 10 ms (upstream 30 ms) |
+| RViz frame rate during SLAM | ~57 fps (upstream config ~31 fps) |
 | Waypoint success rate | _pending_ |
 | Mean time per waypoint | _pending_ |
 
@@ -144,6 +150,7 @@ Demo video: _pending_.
 | Gazebo aborts with `OGRE EXCEPTION ... GL3PlusTextureGpu::copyTo` | Mesa D3D12 reports OpenGL 4.2 | `sim.launch.py` sets `MESA_GL_VERSION_OVERRIDE=4.5` |
 | `package 'holonomic_sim' not found` | Hiwonder `worlds.launch.py` / `room_worlds.launch.py` bug | use `rosorin_navigation sim.launch.py` |
 | Map jumps / TF warnings with SLAM or AMCL | Hiwonder bridge always publishes static `map→odom` | off by default in `sim.launch.py` |
+| Low Real Time Factor (~0.5), jerky motion in `robocup_home` | upstream furniture spawned as dynamic bodies, 30 ms physics step | `sim.launch.py` spawns furniture static, world copy uses 10 ms step (ISSUE-012) |
 | RViz looks smeared while driving (Nav2 view) | AMCL particle cloud redrawn every frame, robot model hidden | `rviz2 -d src/rosorin_navigation/rviz/nav2_clean.rviz --ros-args -p use_sim_time:=true` |
 
 Full history of issues and fixes: [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md). Release notes: [`CHANGELOGS.md`](CHANGELOGS.md).

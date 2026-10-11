@@ -6,10 +6,12 @@ Môi trường kiểm thử: WSL2 Ubuntu 22.04.5, ROS 2 Humble, Ignition Gazebo 
 | Ngày | Bước | Lệnh | Kết quả |
 |---|---|---|---|
 | 2026-10-12 | Build | `colcon build --symlink-install` | 3 package (`robot_gazebo`, `rosorin_description`, `rosorin_navigation`) build OK |
-| 2026-10-12 | Mô phỏng | `ros2 launch rosorin_navigation sim.launch.py` | Robot spawn trong `robocup_home`, RTF 0.7–0.95 |
+| 2026-10-12 | Mô phỏng | `ros2 launch rosorin_navigation sim.launch.py` | Robot + 17 món nội thất static trong `robocup_home`, RTF 1.000 |
+| 2026-10-12 | Mô phỏng | `ros2 launch rosorin_navigation sim.launch.py world:=empty` | RTF 1.000 |
+| 2026-10-12 | Đo RTF | `ign topic -e -t /stats -n 60 \| grep real_time_factor` | 1.000 khi chạy cùng SLAM + RViz |
 | 2026-10-12 | Di chuyển | `ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.3}}"` | `/odom` x tăng 0 → 0.76 m |
-| 2026-10-12 | LiDAR | `ros2 topic hz /scan` | ~5.5 Hz (wall clock), frame `lidar_frame` |
-| 2026-10-12 | SLAM | `ros2 launch rosorin_navigation slam.launch.py` | RViz mở, `/map` 202×162 @ 0.05 m, `map→odom` do slam_toolbox phát |
+| 2026-10-12 | LiDAR | `ros2 topic hz /scan` | 10.0 Hz, frame `lidar_frame` |
+| 2026-10-12 | SLAM | `ros2 launch rosorin_navigation slam.launch.py` | RViz mở (~57 fps), `/map` 202×161 @ 0.05 m, `map→odom` do slam_toolbox phát |
 | 2026-10-12 | Dọn tiến trình | `pkill -f "ign gazebo"; pkill -x rviz2; pkill -f slam_toolbox` | Không còn tiến trình mô phỏng |
 
 ## TurtleBot3 baseline (Gazebo Classic)

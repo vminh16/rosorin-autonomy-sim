@@ -3,7 +3,8 @@ SLAM (slam_toolbox, sync mode) for the ROSOrin Pro simulation, with RViz.
 
 Fixed copy of robot_gazebo/launch/include/slam.launch.py (Hiwonder ROSOrin Pro wiki,
 V1.0.0 2025-05-29). Changes: no dependency on the `need_compile` variable from .typerc,
-and RViz runs with use_sim_time:=true (upstream starts it on wall-clock time).
+and RViz runs with use_sim_time:=true (upstream starts it on wall-clock time) using
+rviz/slam.rviz from this package (copy of upstream slam.rviz, frame rate 30 -> 60).
 Parameters are the upstream config/slam.yaml.
 """
 
@@ -33,10 +34,12 @@ def generate_launch_description():
             'base_frame': 'base_footprint',
         }])
 
+    rviz_config = os.path.join(
+        get_package_share_directory('rosorin_navigation'), 'rviz', 'slam.rviz')
     rviz_node = Node(
         package='rviz2',
         executable='rviz2',
-        arguments=['-d', os.path.join(robot_gazebo, 'rviz', 'slam.rviz')],
+        arguments=['-d', rviz_config],
         parameters=[{'use_sim_time': True}],
         condition=IfCondition(rviz))
 

@@ -79,6 +79,8 @@ Quay bằng OBS trên Windows (WSLg). Không commit video; upload rồi ghi link
 - `Invalid frame ID "odom"` → robot chưa spawn; kiểm tra terminal Gazebo trước khi nhìn Nav2.
 - Robot không định vị được trên map → chưa đặt initial pose cho AMCL, hoặc thiếu `use_sim_time`.
 - Gazebo chậm (FPS thấp, RTF < 0.5) → WSL đang dùng iGPU; xem ISSUE-003 trong `docs/DEBUG_LOG.md`.
+- RTF < 1 với ROSOrin → kiểm tra vật thể động không cần thiết trước khi nghi render (ISSUE-012); đo bằng
+  `ign topic -e -t /stats -n 60 | grep real_time_factor`, đổi từng yếu tố một (`furniture:=false`, `camera:=false`, `world:=empty`).
 - TF thiếu `map→odom` → SLAM/AMCL chưa chạy hoặc đang chạy hai node cùng phát TF này.
 - Vật cản "ma" trên costmap → initial pose sai; đặt lại pose rồi clear costmap.
 Mọi lỗi thật gặp phải → `/log-issue`.

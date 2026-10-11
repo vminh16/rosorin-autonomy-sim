@@ -24,15 +24,37 @@ Mẫu một mục:
 - Đưa vào báo cáo: yes | no
 -->
 
-## ISSUE-012 — Real Time Factor của ROSOrin chỉ 0.7–0.95
+## ISSUE-012 — Real Time Factor của ROSOrin chỉ 0.5–0.95, chuyển động giật
 - Ngày: 2026-10-12
 - Thành phần: Gazebo
-- Trạng thái: OPEN
+- Trạng thái: FIXED
 - Lệnh gây lỗi: `ros2 launch rosorin_navigation sim.launch.py`
-- Lỗi: `ign topic -e -t /stats` → `real_time_factor: 0.67–0.93`; `/scan` cấu hình 10 Hz nhưng đo được ~5.5 Hz.
-- Nguyên nhân: giả thuyết: server render bằng ogre2 cho `gpu_lidar` + depth camera (`aurora`) mỗi bước; TurtleBot3 (Gazebo Classic, không camera) đạt RTF 1.00 trên cùng máy.
-- Cách sửa: chưa. Hướng thử: tắt depth camera trong bản copy URDF, hoặc giảm `update_rate` camera.
-- Thời gian mất: —
+- Lỗi: `ign topic -e -t /stats` → `real_time_factor` trung bình 0.50; `/scan` cấu hình 10 Hz nhưng chỉ ~5 Hz; `/odom` 20 Hz.
+- Nguyên nhân (đã xác minh bằng đo từng biến thể, RTF trung bình 60 mẫu):
+
+  | Biến thể | RTF |
+  |---|---|
+  | Mặc định (Hiwonder) | 0.50 |
+  | Không GUI | 0.39 |
+  | Không bridge camera | 0.68 |
+  | Tắt bóng đổ | 0.54 |
+  | Bước vật lý 0.01 s (nội thất động) | 0.19 |
+  | World `empty` | 1.00 |
+  | `robocup_home` không nội thất | 1.00 |
+  | **Nội thất spawn dạng static** | **1.00** |
+
+  Giả thuyết ban đầu (render camera / ogre2) **sai**. Chi phí mỗi bước vật lý cố định ~50 ms vì
+  `spawn_objects.launch.py` spawn 17 món nội thất là vật thể động (URDF không có `<static>`), nằm đè lên sàn và lên nhau
+  (chai trên bàn) nên bộ giải va chạm phải xử lý tiếp xúc ở mọi bước. Bước vật lý 0.03 s của world che bớt vấn đề
+  nhưng làm chuyển động chỉ cập nhật 33 lần/giây.
+- Cách sửa (`rosorin_navigation`):
+  1. `sim.launch.py` tự spawn nội thất (vị trí chép từ `spawn_objects.launch.py`) qua `create -string`,
+     thêm `<gazebo><static>true</static></gazebo>` và đổi đường dẫn mesh tương đối thành tuyệt đối.
+  2. `worlds/robocup_home.sdf`: `max_step_size` 0.03 → 0.01 s.
+  3. `rviz/slam.rviz`, `rviz/nav2_clean.rviz`: `Frame Rate` 30 → 60.
+- Kết quả, đo khi có GUI + SLAM + RViz + robot đang chạy: RTF trung bình 1.000, thấp nhất 1.000; `/scan` 10.0 Hz;
+  `/odom` 50 Hz; camera 27.6 Hz; RViz 57 fps (trước 31 fps); CPU tổng ~52%.
+- Thời gian mất: 1h
 - Đưa vào báo cáo: yes
 
 ## ISSUE-011 — IMU của ROSOrin không phát dữ liệu
