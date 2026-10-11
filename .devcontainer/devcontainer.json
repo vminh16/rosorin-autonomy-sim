@@ -1,0 +1,39 @@
+{
+	"name": "ROS 2 Workspace",
+	"image": "mcr.microsoft.com/devcontainers/base:ubuntu26.04",
+	"features": {
+		// For CUDA support uncomment the following line.
+		// "ghcr.io/devcontainers/features/nvidia-cuda:3": {
+		// 	"installToolkit": true
+		// },
+		// For GUI applications on native Linux using X11, uncomment this feature.
+		// "ghcr.io/althack/devcontainers/linux-x11-forwarding:0": {},
+		"ghcr.io/althack/devcontainers/ros2:0": {
+			"distro": "lyrical",
+			"package": "desktop"
+		}
+	},
+	"runArgs": [
+		"--network=host",
+		"--cap-add=SYS_PTRACE",
+		"--security-opt=seccomp:unconfined",
+		// For GUI applications on Linux, the IPC namespace may need to be shared with the host.
+		// "--ipc=host"
+		// For CUDA support, uncomment the following line. This allows the container to access the GPU on the host machine.
+		// "--gpus",
+		// "all"
+	],
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"althack.ament-task-provider",
+				"ms-python.autopep8",
+				"ms-python.python",
+				"ms-vscode.cpptools",
+				"Ranch-Hand-Robotics.rde-pack",
+				"redhat.vscode-yaml",
+				"zachflower.uncrustify"
+			]
+		}
+	}
+}
