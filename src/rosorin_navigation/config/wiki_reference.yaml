@@ -1,0 +1,44 @@
+# Parameters of the real ROSOrin Pro, taken from the Hiwonder wiki
+# (https://wiki.hiwonder.com/projects/rosorin-pro/en/latest/ and the Aurora930 Pro wiki).
+# Used by test/test_sim_fidelity.py to check that the simulation reproduces the robot.
+# Detailed quotes and image references: docs/wiki_findings/ (files A..E).
+#
+# `tol` is a relative tolerance unless the key ends in `_abs`.
+# Values marked INFERRED are not printed in the wiki but follow from a printed value.
+
+lidar:                      # COIN-D6, wiki 1.10.5 "LiDAR"
+  fov_deg: 360.0            # "Scanning range 360 degrees"
+  resolution_deg: 0.9       # "Angular resolution 0.9 degrees" -> 400 samples per turn
+  rate_hz: 10.0             # "default 10Hz"
+  range_max: 12.0           # "Black object: 12m"
+  range_min: 0.1            # INFERRED from the accuracy table starting at 0.1 m
+  tol: 0.02
+  range_min_tol_abs: 0.06   # simulated min range may be 0.1..0.16 m
+
+camera:                     # Aurora930 (Pro), wiki 1.10.4
+  hfov_deg: 74.0            # robot manual "74 x 51 deg"; Aurora wiki says H71 x V46
+  hfov_tol_abs: 3.5         # covers both published values
+  width: 640
+  height: 400
+  rate_hz: 12.0             # "640 x 400 at 12 fps"
+  tol: 0.02
+
+imu:
+  present: true             # wiki 2.1.4: /imu, sensor_msgs/Imu, frame imu_link
+  frame: imu_link
+
+drive:                      # wiki 2.2.2.4 mecanum.py, instantiated in odom_publisher
+  wheel_radius: 0.04        # wheel_diameter=0.08
+  lever_arm: 0.174355       # (wheelbase 0.17706 + track_width 0.17165) / 2
+  tol: 0.05
+  max_linear_speed: 0.6     # wiki 2.1.5.2 "recommended range -0.6 ~ 0.6"
+
+body:                       # NOT in the wiki; from retail listing (OpenELAB: Standard kit ~3.1 kg)
+  total_mass_min: 1.0       # kg, sanity band only
+  total_mass_max: 6.0
+
+odom:                       # wiki 2.1.4 / 2.1.5.5
+  topic: /odom
+  frame_id: odom
+  child_frame_id: base_footprint
+  rate_hz: 50.0

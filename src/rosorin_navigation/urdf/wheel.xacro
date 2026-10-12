@@ -1,0 +1,62 @@
+<?xml version="1.0"?>
+<!--
+  Driven wheels of the ROSOrin Pro simulation.
+  Fixed copy of robot_gazebo/urdf/wheel.xacro (Hiwonder, V1.0.0 2025-05-29). Changes:
+  - wheel positions follow the CAD wheels of rosorin.xacro (front-rear 0.17165 m) and the
+    left-right distance 0.17706 m from the wiki (2.2.2.4, mecanum.py); upstream used
+    0.16 x 0.18 m, different from both
+  - wheel mass 0.07 kg (upstream 10 kg each, 40 kg in total; the CAD wheel links weigh 0.07 kg)
+  - wheels are frictionless: they carry the weight and spin as commanded (visual and /joint_states),
+    the body is moved by the VelocityControl plugin of rosorin_sim.urdf.xacro. Cylinder wheels
+    cannot reproduce mecanum rollers: with upstream mu = 10 the robot cannot move sideways, and
+    anisotropic friction (roller axis at 45 degrees) either blocks sideways motion or makes
+    turning jerky (measured with tools/probe_motion.py, see docs/DEBUG_LOG.md)
+  - joint damping/friction removed (the velocity command already fixes the wheel speed)
+  - removed the malformed kp value "1000000000.0.0" (ignored by the DART engine anyway)
+-->
+<robot xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+  <xacro:property name="WHEEL_RADIUS" value="0.04" />   <!-- wiki: wheel_diameter=0.08 -->
+  <xacro:property name="WHEEL_LENGTH" value="0.025" />
+  <xacro:property name="WHEEL_MASS" value="0.07" />
+  <xacro:property name="WHEEL_MU" value="0.0" />
+
+  <xacro:macro name="mecanum_wheel" params="name x y">
+    <link name="${name}_link">
+      <visual>
+        <geometry><cylinder radius="${WHEEL_RADIUS}" length="${WHEEL_LENGTH}"/></geometry>
+        <material name="black"><color rgba="0 0 0 1"/></material>
+        <origin rpy="1.5707 0 0"/>
+      </visual>
+      <collision>
+        <geometry><cylinder radius="${WHEEL_RADIUS}" length="${WHEEL_LENGTH}"/></geometry>
+        <origin rpy="1.5707 0 0"/>
+      </collision>
+      <inertial>
+        <mass value="${WHEEL_MASS}"/>
+        <inertia ixx="3.2e-5" ixy="0" ixz="0" iyy="5.6e-5" iyz="0" izz="3.2e-5"/>
+      </inertial>
+    </link>
+
+    <joint name="${name}_joint" type="continuous">
+      <parent link="base_link"/>
+      <child link="${name}_link"/>
+      <origin xyz="${x} ${y} 0.01"/>
+      <axis xyz="0 1 0"/>
+      <dynamics damping="0.0" friction="0.0"/>
+    </joint>
+
+    <gazebo reference="${name}_link">
+      <mu1>${WHEEL_MU}</mu1>
+      <mu2>${WHEEL_MU}</mu2>
+      <minDepth>0.0001</minDepth>
+    </gazebo>
+  </xacro:macro>
+
+  <!-- x: CAD wheel positions (0.090972 / -0.080677); y: +-0.17706 / 2 -->
+  <xacro:mecanum_wheel name="front_left"  x="0.090972"  y="0.08853"/>
+  <xacro:mecanum_wheel name="front_right" x="0.090972"  y="-0.08853"/>
+  <xacro:mecanum_wheel name="rear_left"   x="-0.080677" y="0.08853"/>
+  <xacro:mecanum_wheel name="rear_right"  x="-0.080677" y="-0.08853"/>
+
+</robot>

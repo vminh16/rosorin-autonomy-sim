@@ -17,6 +17,9 @@ from the Hiwonder ROSOrin Pro simulation package (wiki 9_Gazebo_Simulation,
   - furniture (positions from spawn_objects.launch.py) is spawned as static models: upstream
     spawns 17 dynamic multi-link bodies, which drops the Real Time Factor from 1.0 to ~0.5
   - robocup_home uses worlds/robocup_home.sdf from this package: physics step 0.03 -> 0.01 s
+  - robot model is urdf/rosorin_sim.urdf.xacro from this package (wheel kinematics, LiDAR 360 deg,
+    camera FOV/rate, IMU, mass) instead of robot_gazebo/urdf/robot.gazebo.xacro; each change is
+    explained in the header of that file and checked by test/test_sim_fidelity.py
 """
 
 import os
@@ -93,7 +96,8 @@ def launch_setup(context):
                              world + '.sdf')
     world_file = world_override or (own_world if os.path.exists(own_world) else
                                     os.path.join(robot_gazebo, 'worlds', world + '.sdf'))
-    xacro_file = xacro_override or os.path.join(robot_gazebo, 'urdf', 'robot.gazebo.xacro')
+    xacro_file = xacro_override or os.path.join(
+        get_package_share_directory('rosorin_navigation'), 'urdf', 'rosorin_sim.urdf.xacro')
     ign_args = f' -r {world_file} --render-engine-gui {gui_engine}' + ('' if gui else ' -s')
     robot_description = ParameterValue(
         Command(['xacro ', xacro_file, ' sim_ign:=true']), value_type=str)

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ROSOrin Pro simulation model (Ignition Gazebo Fortress).
+  Fixed copy of robot_gazebo/urdf/robot.gazebo.xacro (Hiwonder, V1.0.0 2025-05-29). The robot body
+  (rosorin_description/urdf/rosorin.xacro) is used unchanged. Changes, with the evidence for each
+  in docs/wiki_findings/ and test/test_sim_fidelity.py:
+  - MecanumDrive uses the wiki constants: wheel_radius 0.04, wheel_separation 0.17706,
+    wheelbase 0.17165 (upstream 0.05 / 0.34 / 0.30 disagreed with the simulated wheels:
+    forward speed came out at 0.8x the command and turning at 1.5x)
+  - IMU sensor included (upstream loaded the plugin but never declared the sensor, ISSUE-011)
+  - sensors and wheels: see lidar.gazebo.xacro, camera.gazebo.xacro, wheel.xacro
+  - VelocityControl moves the body (exact holonomic twist tracking, sideways included);
+    wheels are frictionless and only spin (see wheel.xacro for why)
+  - total mass about 3.1 kg: the CAD body weighs 0.4 kg, so a 2.4 kg ballast link is added at
+    the centre (retail figure for the Standard kit, the wiki does not give a mass)
+  - removed the ign_ros2_control plugin (the URDF has no <ros2_control> tag, see ISSUE-009)
+-->
+<robot name="robot" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="sim_ign" default="true"/>
+
+  <xacro:include filename="$(find rosorin_description)/urdf/rosorin.xacro"/>
+  <xacro:include filename="$(find rosorin_navigation)/urdf/wheel.xacro"/>
+  <xacro:include filename="$(find rosorin_navigation)/urdf/lidar.gazebo.xacro"/>
+  <xacro:include filename="$(find rosorin_navigation)/urdf/camera.gazebo.xacro"/>
+  <xacro:include filename="$(find robot_gazebo)/urdf/imu.gazebo.xacro"/>
+
+  <!-- mass the CAD model lacks (battery, controller, arm, screen) -->
+  <link name="ballast_link">
+    <inertial>
+      <mass value="2.4"/>
+      <inertia ixx="0.00706" ixy="0" ixz="0" iyy="0.01378" iyz="0" izz="0.01828"/>
+    </inertial>
+  </link>
+  <joint name="ballast_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="ballast_link"/>
+    <origin xyz="0 0 0.05"/>
+  </joint>
+
+  <gazebo>
+    <plugin filename="libignition-gazebo-joint-state-publisher-system.so"
+            name="ignition::gazebo::systems::JointStatePublisher">
+      <topic>joint_states</topic>
+    </plugin>
+
+    <plugin filename="ignition-gazebo-sensors-system"
+            name="ignition::gazebo::systems::Sensors">
+      <render_engine>ogre2</render_engine>
+    </plugin>
+
+    <plugin filename="ignition-gazebo-imu-system" name="ignition::gazebo::systems::Imu"/>
+
+    <!-- /odom and TF odom -> base_footprint, 50 Hz as the real odom_publisher.
+         NOTE: this is the true pose from the physics engine (no drift or noise). -->
+    <plugin filename="ignition-gazebo-odometry-publisher-system"
+            name="ignition::gazebo::systems::OdometryPublisher">
+      <odom_publish_frequency>50</odom_publish_frequency>
+      <odom_topic>/odom</odom_topic>
+      <odom_frame>odom</odom_frame>
+      <robot_base_frame>base_footprint</robot_base_frame>
+      <tf_topic>/odom/tf</tf_topic>
+    </plugin>
+
+    <!-- the body follows the commanded twist (body frame), like the real robot whose wheel
+         controller tracks /controller/cmd_vel; MecanumDrive below still spins the wheels -->
+    <plugin filename="ignition-gazebo-velocity-control-system"
+            name="ignition::gazebo::systems::VelocityControl">
+      <topic>/controller/cmd_vel</topic>
+    </plugin>
+
+    <plugin filename="ignition-gazebo-mecanum-drive-system"
+            name="ignition::gazebo::systems::MecanumDrive">
+      <front_left_joint>front_left_joint</front_left_joint>
+      <front_right_joint>front_right_joint</front_right_joint>
+      <back_left_joint>rear_left_joint</back_left_joint>
+      <back_right_joint>rear_right_joint</back_right_joint>
+      <wheel_separation>0.17706</wheel_separation>
+      <wheelbase>0.17165</wheelbase>
+      <wheel_radius>0.04</wheel_radius>
+      <topic>/controller/cmd_vel</topic>
+      <odom_topic>/odom</odom_topic>
+      <frame_id>odom</frame_id>
+      <child_frame_id>base_link</child_frame_id>
+    </plugin>
+  </gazebo>
+</robot>
