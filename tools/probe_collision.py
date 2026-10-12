@@ -1,7 +1,8 @@
 """
 Check that the simulated robot stays on the floor when it is driven into obstacles (ISSUE-016).
 
-Needs a running simulation of the furnished house (``ros2 launch rosorin_navigation sim.launch.py``).
+Needs a running simulation of the furnished house
+(``ros2 launch rosorin_navigation sim.launch.py``).
 The robot is reset to the centre of the house and driven at ``--speed`` (default 1.0 m/s, faster
 than teleop or Nav2 normally drive) in 8 directions, into walls and furniture; one run also
 reverses, turns and strafes while the robot is pinned against an obstacle, the sequence that made

@@ -9,6 +9,7 @@ Reference values live in ``config/wiki_reference.yaml``; each test compares one 
 URDF that ``sim.launch.py`` loads against it.
 """
 
+import math
 import os
 import sys
 
@@ -122,6 +123,14 @@ def test_drive_force_is_traction_limited(robot, ref):
     assert 0.3 <= float(drive.findtext('traction_coefficient')) <= 1.0
     lever = float(drive.findtext('lever_arm'))
     assert _near(lever, ref['drive']['lever_arm'], ref['drive']['tol']), lever
+
+
+def test_wheel_speed_limited_by_motor(robot, ref):
+    """No wheel turns faster than the motor's no-load speed (110 rpm)."""
+    drive = next(p for p in _plugins(robot) if p.get('name') == 'rosorin::PlanarDrive')
+    limit = ref['drive']['motor_no_load_rpm'] * 2 * math.pi / 60
+    assert _near(float(drive.findtext('max_wheel_speed')), limit, 0.01)
+    assert _near(float(drive.findtext('wheel_radius')), ref['drive']['wheel_radius'], 0.01)
 
 
 def test_single_odom_publisher(robot):

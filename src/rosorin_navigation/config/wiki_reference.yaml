@@ -31,7 +31,9 @@ drive:                      # wiki 2.2.2.4 mecanum.py, instantiated in odom_publ
   wheel_radius: 0.04        # wheel_diameter=0.08
   lever_arm: 0.174355       # (wheelbase 0.17706 + track_width 0.17165) / 2
   tol: 0.05
-  max_linear_speed: 0.6     # wiki 2.1.5.2 "recommended range -0.6 ~ 0.6"
+  max_linear_speed: 0.6     # wiki 2.1.5.2 "recommended range -0.6 ~ 0.6" (above the motor limit below)
+  motor_no_load_rpm: 110    # wiki 1.10.2.3 "No-load speed 110rpm" (1:90 gearbox, output shaft):
+                            # a wheel reaches at most 110 rpm * pi * 0.08 m = 0.461 m/s
 
 body:                       # NOT in the wiki; from retail listing (OpenELAB: Standard kit ~3.1 kg)
   total_mass_min: 1.0       # kg, sanity band only

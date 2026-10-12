@@ -17,6 +17,9 @@
 //   <lever_arm>           (wheelbase + track) / 2, m          default 0.174355 (Hiwonder wiki)
 //   <time_constant>       tau, velocity response time, s      default 0.1
 //   <max_tilt>            no drive above this roll/pitch, rad default 0.5 (wheels off the ground)
+//   <wheel_radius>        m                                   default 0.04 (wiki: diameter 0.08)
+//   <max_wheel_speed>     motor limit, rad/s                  default 11.519 (110 rpm no-load, wiki
+//                         1.10.2.3): 0.461 m/s straight, 2.64 rad/s turning
 
 #include <ignition/msgs/twist.pb.h>
 
@@ -68,6 +71,8 @@ public:
     lever_ = _sdf->Get<double>("lever_arm", 0.174355).first;
     tau_ = _sdf->Get<double>("time_constant", 0.1).first;
     max_tilt_ = _sdf->Get<double>("max_tilt", 0.5).first;
+    wheel_radius_ = _sdf->Get<double>("wheel_radius", 0.04).first;
+    max_wheel_speed_ = _sdf->Get<double>("max_wheel_speed", 11.519).first;
     node_.Subscribe(topic, &PlanarDrive::OnCmd, this);
     ignmsg << "PlanarDrive listening on [" << topic << "], mu " << mu_ << ", tau " << tau_ <<
       " s\n";
@@ -104,6 +109,15 @@ public:
       vx = cmd_vx_;
       vy = cmd_vy_;
       wz = cmd_wz_;
+    }
+    // the fastest mecanum wheel turns at (|vx| + |vy| + lever |wz|) / r; above the motor limit the
+    // whole command is scaled down, keeping its direction
+    const double wheel_max = (std::abs(vx) + std::abs(vy) + lever_ * std::abs(wz)) / wheel_radius_;
+    if (wheel_max > max_wheel_speed_) {
+      const double k = max_wheel_speed_ / wheel_max;
+      vx *= k;
+      vy *= k;
+      wz *= k;
     }
     const double c = std::cos(rot.Yaw());
     const double s = std::sin(rot.Yaw());
@@ -172,6 +186,7 @@ private:
   std::mutex mutex_;
   double cmd_vx_{0.0}, cmd_vy_{0.0}, cmd_wz_{0.0};
   double mu_{0.6}, lever_{0.174355}, tau_{0.1}, max_tilt_{0.5};
+  double wheel_radius_{0.04}, max_wheel_speed_{11.519};
   double mass_{0.0}, izz_{0.0}, max_force_{0.0};
   int mass_attempts_{0};
   math::Vector3d com_offset_;

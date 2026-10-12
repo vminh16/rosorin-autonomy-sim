@@ -72,6 +72,9 @@
       <lever_arm>0.174355</lever_arm>
       <time_constant>0.1</time_constant>
       <max_tilt>0.5</max_tilt>
+      <wheel_radius>0.04</wheel_radius>
+      <!-- motor no-load speed 110 rpm (wiki 1.10.2.3): no wheel turns faster -->
+      <max_wheel_speed>11.519</max_wheel_speed>
     </plugin>
 
     <plugin filename="ignition-gazebo-mecanum-drive-system"
