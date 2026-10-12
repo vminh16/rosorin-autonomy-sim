@@ -1,28 +1,44 @@
-# Verified Commands
+# Verified commands
 
-Lệnh đã chạy thành công, chép nguyên văn. Mỗi terminal: `source /opt/ros/humble/setup.bash && source install/setup.bash` tại gốc repo.
-Môi trường kiểm thử: WSL2 Ubuntu 22.04.5, ROS 2 Humble, Ignition Gazebo 6.18 (Fortress), RTX 2050.
+Commands that ran successfully, copied verbatim. In every terminal first run
+`source /opt/ros/humble/setup.bash && source install/setup.bash` from the repository root.
+Test machine: Ubuntu 22.04.5 (WSL2), ROS 2 Humble, Ignition Gazebo 6.18 (Fortress), RTX 2050.
 
-| Ngày | Bước | Lệnh | Kết quả |
+| Date | Step | Command | Result |
 |---|---|---|---|
-| 2026-10-12 | Build | `colcon build --symlink-install` | 3 package (`robot_gazebo`, `rosorin_description`, `rosorin_navigation`) build OK |
-| 2026-10-12 | Mô phỏng | `ros2 launch rosorin_navigation sim.launch.py` | Robot + 17 món nội thất static trong `robocup_home`, RTF 1.000 |
-| 2026-10-12 | Mô phỏng | `ros2 launch rosorin_navigation sim.launch.py world:=empty` | RTF 1.000 |
-| 2026-10-12 | Đo RTF | `ign topic -e -t /stats -n 60 \| grep real_time_factor` | 1.000 khi chạy cùng SLAM + RViz |
-| 2026-10-12 | Di chuyển | `ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.3}}"` | `/odom` x tăng 0 → 0.76 m |
-| 2026-10-12 | LiDAR | `ros2 topic hz /scan` | 10.0 Hz, frame `lidar_frame` |
-| 2026-10-12 | SLAM | `ros2 launch rosorin_navigation slam.launch.py` | RViz mở (~57 fps), `/map` 202×161 @ 0.05 m, `map→odom` do slam_toolbox phát |
-| 2026-10-12 | Dọn tiến trình | `pkill -f "ign gazebo"; pkill -x rviz2; pkill -f slam_toolbox` | Không còn tiến trình mô phỏng |
+| 2026-10-12 | Build | `colcon build --symlink-install` | 4 packages (`robot_gazebo`, `rosorin_description`, `rosorin_gazebo_plugins`, `rosorin_navigation`) build; source `install/setup.bash` again afterwards so Gazebo finds the drive plugin |
+| 2026-10-12 | Package tests | `colcon test --packages-select rosorin_gazebo_plugins rosorin_navigation && colcon test-result` | 24 tests, 0 failures (fidelity, flake8, pep257, uncrustify, lint_cmake, xmllint) |
+| 2026-10-12 | Simulation | `ros2 launch rosorin_navigation sim.launch.py` | Robot and 17 static furniture models in `robocup_home`, RTF 1.000 |
+| 2026-10-12 | Simulation | `ros2 launch rosorin_navigation sim.launch.py world:=empty` | RTF 1.000 |
+| 2026-10-12 | Headless simulation | `ros2 launch rosorin_navigation sim.launch.py gui:=false world:=empty` | Server without GUI, RTF 1.000, used for automated checks |
+| 2026-10-12 | Spec check | `python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q` | 12 passed (URDF against the wiki, drive and `/odom` checks), no simulator needed |
+| 2026-10-12 | Motion check | `python3 tools/probe_motion.py --speed 0.2 --turn 0.5 --seconds 4` | forward / sideways / turn = 1.00 / 1.00 / 1.00 (needs a running simulation) |
+| 2026-10-12 | Collision check | `python3 tools/probe_collision.py` | 9/9 PASS: max tilt 0.6 deg, max z 0.003 m at 1 m/s into walls and furniture (needs the furnished house running; exit code 1 on FAIL) |
+| 2026-10-12 | Physics check | `python3 tools/probe_physics.py` | 7/7 PASS (empty world): no creep at rest, IMU 9.800 m/s2, step 63% in 0.108 s, stop in 0.34 s, top speed 0.461 m/s and 2.643 rad/s (motor limit) |
+| 2026-10-12 | Odometry source | `ign topic -i -t /odom` | 1 publisher (`OdometryPublisher`) |
+| 2026-10-12 | RTF | `ign topic -e -t /stats -n 60 \| grep real_time_factor` | 1.000 with SLAM and RViz running |
+| 2026-10-12 | Drive | `ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.3}}"` | `/odom` x grows 0 -> 0.76 m |
+| 2026-10-12 | LiDAR | `ros2 topic hz /scan` | 9.95 Hz, 400 beams, frame `lidar_frame` |
+| 2026-10-12 | SLAM | `ros2 launch rosorin_navigation slam.launch.py` | RViz opens (~57 fps), `/map` published, `map->odom` comes from slam_toolbox |
+| 2026-10-12 | Teleop | `ros2 run teleop_twist_keyboard teleop_twist_keyboard` | Robot follows the keys. Teleop 2.4.1 accepts `-p speed:=0.25 -p turn:=0.5` (defaults 0.5 / 1.0); `z` lowers both by 10% |
+| 2026-10-12 | Save map | `ros2 run nav2_map_server map_saver_cli -f <path>/<name> --ros-args -p use_sim_time:=true -p map_subscribe_transient_local:=true` | Writes `.pgm` + `.yaml` from the slam_toolbox `/map` (tested into a temporary directory). `map_subscribe_transient_local` comes from wiki 5.1 |
+| 2026-10-12 | Save map | `ros2 run nav2_map_server map_saver_cli -f maps/house --ros-args -p use_sim_time:=true -p map_subscribe_transient_local:=true` | `maps/house.{pgm,yaml}`, 205x169 cells at 0.05 m; 99.7% of the world's walls detected, 80% of occupied cells within 0.1 m of a wall (the rest is furniture), no global offset. The RViz screenshot tool gives a black image on this setup, use an OS screenshot |
+| 2026-10-12 | Map info | `ros2 topic echo --once /map --field info` | `resolution`, `width`, `height`, `origin` of the map being built |
+| 2026-10-12 | TF | `ros2 run tf2_ros tf2_echo map odom` | `map->odom` published by slam_toolbox |
+| 2026-10-12 | True pose | `ign topic -e -t /world/robot_world/pose/info -n 1` | True pose of `rosorin` (the world is named `robot_world`). Used to check whether the robot left the house (x in [-5, 5], y in [-4, 4]) |
+| 2026-10-12 | Expand URDF | `DEPTH_CAMERA_TYPE=aurora xacro src/rosorin_navigation/urdf/rosorin_sim.urdf.xacro` | Full URDF of the simulated robot |
+| 2026-10-12 | Clean up | `pkill -f "ign gazebo"; pkill -x rviz2; pkill -f slam_toolbox` | No simulation process left |
+| 2026-10-12 | Navigation | `ros2 launch rosorin_navigation navigation.launch.py rviz:=false` | After `sim.launch.py`, without SLAM. map_server (`maps/house.yaml`), AMCL (starts at the spawn pose), MPPI controller; both lifecycle managers report "Managed nodes are active". Tested headless (`sim.launch.py gui:=false`) |
+| 2026-10-12 | Multi-waypoint | `ros2 run rosorin_navigation waypoint_follower --ros-args -p waypoints_file:=src/rosorin_navigation/config/waypoints.yaml` | 7/7 waypoints in 112 s, run twice (14/14); writes `results/nav_runs/<timestamp>.csv`, exit code 1 if a waypoint fails |
+| 2026-10-12 | Multi-waypoint, long route | `ros2 run rosorin_navigation waypoint_follower --ros-args -p waypoints_file:=src/rosorin_navigation/config/waypoints_extended.yaml` | 14/14 waypoints, 56.6 m in 216 s, on the GUI simulation with RViz (the robot started at (2.18, 0.90), where the route was generated from) |
 
 ## TurtleBot3 baseline (Gazebo Classic)
 
-| Ngày | Bước | Lệnh | Kết quả |
+| Date | Step | Command | Result |
 |---|---|---|---|
-| 2026-10-12 | Gazebo | `ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py` | burger spawn, FPS 62, RTF 1.00 |
-| 2026-10-12 | Nav2 | `ros2 launch nav2_bringup bringup_launch.py use_sim_time:=True map:=/opt/ros/humble/share/nav2_bringup/maps/turtlebot3_world.yaml` | Navigation + Localization active |
-| 2026-10-12 | RViz | `rviz2 -d src/rosorin_navigation/rviz/nav2_clean.rviz --ros-args -p use_sim_time:=true` | Robot model hiện, không còn particle cloud |
+| 2026-10-12 | Gazebo | `ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py` | burger spawns, 62 FPS, RTF 1.00 |
+| 2026-10-12 | Nav2 | `ros2 launch nav2_bringup bringup_launch.py use_sim_time:=True map:=/opt/ros/humble/share/nav2_bringup/maps/turtlebot3_world.yaml` | Navigation and localization active |
+| 2026-10-12 | RViz | `rviz2 -d src/rosorin_navigation/rviz/nav2_clean.rviz --ros-args -p use_sim_time:=true` | Robot model visible, no particle cloud |
 
-## Chưa xác minh (đã ghi trong README nhưng chưa chạy thử)
-- `ros2 run teleop_twist_keyboard teleop_twist_keyboard` với ROSOrin (cần terminal tương tác)
-- `ros2 run nav2_map_server map_saver_cli -f maps/house --ros-args -p use_sim_time:=true`
-- Navigation trên map đã lưu
+## Not verified yet
+- Single goals with "2D Goal Pose" in RViz (single goals were measured with `nav2_simple_commander` `goToPose`)

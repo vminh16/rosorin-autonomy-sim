@@ -4,9 +4,14 @@ install/
 log/
 site/
 
-# Personal Claude Code notes
+# Local-only files: notes for the coding assistant and personal planning (kept on disk, not published)
+CLAUDE.md
 CLAUDE.local.md
-.claude/settings.local.json
+.claude/
+docs/agents/
+docs/PLAN.md
+docs/DELIVERABLES.md
+docs/wiki_findings/
 
 # Videos (upload elsewhere, link in docs/VIDEOS.md)
 *.mp4

@@ -17,6 +17,8 @@ setup(
         ('share/' + package_name + '/worlds', glob('worlds/*.sdf')),
         ('share/' + package_name + '/urdf', glob('urdf/*.xacro')),
         ('share/' + package_name + '/config', glob('config/*.yaml')),
+        # maps saved at the repository root (maps/house.yaml is the default map of navigation)
+        ('share/' + package_name + '/maps', glob('../../maps/*.yaml') + glob('../../maps/*.pgm')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -31,6 +33,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'waypoint_follower = rosorin_navigation.waypoint_follower:main',
         ],
     },
 )

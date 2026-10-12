@@ -1,0 +1,20 @@
+# Harder route for rosorin_navigation waypoint_follower, in the frame of maps/house.yaml (x, y in m, yaw in rad).
+# 14 points picked automatically on the map: farthest-point sampling over cells with >= 0.45 m clearance that the
+# robot centre can reach from (2.18, 0.90), visited in greedy nearest-neighbour order, each yaw facing the next point.
+# Covers every room and corner; legs up to 10 m. Run 2026-10-12: 14/14, results/nav_runs/20261012-163320.csv.
+frame_id: map
+waypoints:
+  - {name: p01, x: 3.39, y: 0.80, yaw: 2.10}  # clearance 0.45 m
+  - {name: p02, x: 2.10, y: 3.00, yaw: 0.20}  # clearance 0.57 m
+  - {name: p03, x: 4.60, y: 3.50, yaw: 3.14}  # clearance 0.45 m
+  - {name: p04, x: -0.41, y: 3.50, yaw: -2.54}  # clearance 0.45 m
+  - {name: p05, x: -2.35, y: 2.16, yaw: 2.66}  # clearance 1.26 m
+  - {name: p06, x: -4.46, y: 3.25, yaw: -1.21}  # clearance 0.45 m
+  - {name: p07, x: -3.21, y: -0.10, yaw: -0.58}  # clearance 0.50 m
+  - {name: p08, x: -1.30, y: -1.35, yaw: -1.21}  # clearance 0.50 m
+  - {name: p09, x: -0.50, y: -3.50, yaw: 0.00}  # clearance 0.45 m
+  - {name: p10, x: 2.29, y: -3.50, yaw: 1.75}  # clearance 0.45 m
+  - {name: p11, x: 1.90, y: -1.35, yaw: 2.34}  # clearance 0.45 m
+  - {name: p12, x: 0.40, y: 0.21, yaw: -0.47}  # clearance 0.85 m
+  - {name: p13, x: 4.60, y: -1.95, yaw: -2.97}  # clearance 0.45 m
+  - {name: p14, x: -4.46, y: -3.50, yaw: 0.50}  # clearance 0.45 m

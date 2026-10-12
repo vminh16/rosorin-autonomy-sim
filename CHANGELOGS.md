@@ -5,9 +5,17 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 
 ## [Unreleased]
 
-### Planned
-- Port Nav2 bringup (`robot_gazebo/launch/include/navigation.launch.py`) to `rosorin_navigation`.
-- Multi-waypoint follower based on `nav2_simple_commander`, CSV logging to `results/nav_runs/`.
+## 2026-10-12 — Re-check against the real documentation, navigation
+
+| Task | Bug | Result | Commit |
+|---|---|---|---|
+| Compare the simulated robot with the Hiwonder wiki and fix the differences | Drive plugin used wheel radius 0.05 (real 0.04): robot 0.8x slower than commanded, no sideways motion. LiDAR 156 deg (real 360 deg), no IMU, mass 40 kg | Fidelity tests 10/10 green; achieved/commanded velocity 1.00 forward, sideways and turning | `4d85581` |
+| Saved SLAM map of the house | First scan ruined by the flip (ISSUE-016) | `maps/house`: 99.7% of walls detected, no offset | `0169f4a` |
+| Wheel speed limited to the real motor (ISSUE-017) | Robot reached 1.0 m/s and 5 rad/s; real motors allow 0.461 m/s | `probe_physics.py` 7/7 PASS, top speed 0.461 m/s / 2.643 rad/s | `6916228` |
+| Traction-limited drive plugin (ISSUE-016) | Velocity-override drive climbed furniture, flipped and flew off; `/odom` had two publishers | Collision probe 9/9 PASS (was 5/9), velocity 1.00, one `/odom` publisher, 23 package tests green | `79aeecc` |
+| Nav2 on `maps/house` (`navigation.launch.py`, fixed vendor params), MPPI controller (ISSUE-018) | Vendor DWB stalled on a U-shaped path (5/6 goals); robot_radius 0.07 (real 0.177); smoother capped at 0.26 m/s | 6/6 goals, final error 0.11 m mean (true pose) | — |
+| Multi-waypoint follower with CSV log | — | 2 laps, 14/14 waypoints, 16.0 s per waypoint | — |
+| 14-waypoint route through every room (`waypoints_extended.yaml`), GUI simulation | — | 14/14, 56.6 m in 216 s, final error 0.12 m mean (true pose) | — |
 
 ## [0.3.0] — 2026-10-12 — Smooth rendering and real-time simulation
 
