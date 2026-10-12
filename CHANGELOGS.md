@@ -13,9 +13,9 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 | Saved SLAM map of the house | First scan ruined by the flip (ISSUE-016) | `maps/house`: 99.7% of walls detected, no offset | `0169f4a` |
 | Wheel speed limited to the real motor (ISSUE-017) | Robot reached 1.0 m/s and 5 rad/s; real motors allow 0.461 m/s | `probe_physics.py` 7/7 PASS, top speed 0.461 m/s / 2.643 rad/s | `6916228` |
 | Traction-limited drive plugin (ISSUE-016) | Velocity-override drive climbed furniture, flipped and flew off; `/odom` had two publishers | Collision probe 9/9 PASS (was 5/9), velocity 1.00, one `/odom` publisher, 23 package tests green | `79aeecc` |
-| Nav2 on `maps/house` (`navigation.launch.py`, fixed vendor params), MPPI controller (ISSUE-018) | Vendor DWB stalled on a U-shaped path (5/6 goals); robot_radius 0.07 (real 0.177); smoother capped at 0.26 m/s | 6/6 goals, final error 0.11 m mean (true pose) | — |
-| Multi-waypoint follower with CSV log | — | 2 laps, 14/14 waypoints, 16.0 s per waypoint | — |
-| 14-waypoint route through every room (`waypoints_extended.yaml`), GUI simulation | — | 14/14, 56.6 m in 216 s, final error 0.12 m mean (true pose) | — |
+| Nav2 on `maps/house` (`navigation.launch.py`, fixed vendor params), MPPI controller (ISSUE-018) | Vendor DWB stalled on a U-shaped path (5/6 goals); robot_radius 0.07 (real 0.177); smoother capped at 0.26 m/s | 6/6 goals, final error 0.11 m mean (true pose) | `2484e5d` |
+| Multi-waypoint follower with CSV log | — | 2 laps, 14/14 waypoints, 16.0 s per waypoint | `2484e5d` |
+| 14-waypoint route through every room (`waypoints_extended.yaml`), GUI simulation | — | 14/14, 56.6 m in 216 s, final error 0.12 m mean (true pose) | `2484e5d` |
 
 ## [0.3.0] — 2026-10-12 — Smooth rendering and real-time simulation
 

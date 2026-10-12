@@ -11,9 +11,9 @@ Test machine: Ubuntu 22.04.5 (WSL2), ROS 2 Humble, Ignition Gazebo 6.18 (Fortres
 | 2026-10-12 | Simulation | `ros2 launch rosorin_navigation sim.launch.py` | Robot and 17 static furniture models in `robocup_home`, RTF 1.000 |
 | 2026-10-12 | Simulation | `ros2 launch rosorin_navigation sim.launch.py world:=empty` | RTF 1.000 |
 | 2026-10-12 | Headless simulation | `ros2 launch rosorin_navigation sim.launch.py gui:=false world:=empty` | Server without GUI, RTF 1.000, used for automated checks |
-| 2026-10-12 | Spec check | `python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q` | 12 passed (URDF against the wiki, drive and `/odom` checks), no simulator needed |
+| 2026-10-12 | Spec check | `python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q` | 13 passed (URDF against the wiki, drive and `/odom` checks), no simulator needed |
 | 2026-10-12 | Motion check | `python3 tools/probe_motion.py --speed 0.2 --turn 0.5 --seconds 4` | forward / sideways / turn = 1.00 / 1.00 / 1.00 (needs a running simulation) |
-| 2026-10-12 | Collision check | `python3 tools/probe_collision.py` | 9/9 PASS: max tilt 0.6 deg, max z 0.003 m at 1 m/s into walls and furniture (needs the furnished house running; exit code 1 on FAIL) |
+| 2026-10-12 | Collision check | `python3 tools/probe_collision.py` | 9/9 PASS: max tilt 0.6 deg, max z 0.003 m with a 1 m/s command into walls and furniture (measured at `79aeecc`; since `6916228` the drive limits the robot to 0.461 m/s, still 9/9) (needs the furnished house running; exit code 1 on FAIL) |
 | 2026-10-12 | Physics check | `python3 tools/probe_physics.py` | 7/7 PASS (empty world): no creep at rest, IMU 9.800 m/s2, step 63% in 0.108 s, stop in 0.34 s, top speed 0.461 m/s and 2.643 rad/s (motor limit) |
 | 2026-10-12 | Odometry source | `ign topic -i -t /odom` | 1 publisher (`OdometryPublisher`) |
 | 2026-10-12 | RTF | `ign topic -e -t /stats -n 60 \| grep real_time_factor` | 1.000 with SLAM and RViz running |

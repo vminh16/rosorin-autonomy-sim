@@ -44,7 +44,7 @@ Entry template:
   total of 67) then reward facing the wall (south), PathAlign/PathDist (32 each) reward facing the path (west). Example scores:
   best `vx 0, wz +0.05` = 67.4; turning to the path direction `wz -1.0` = 68.4 (PathAlign -0.8, GoalAlign +1.8); driving
   forward costs more than 70. DWB picks a near-zero rotation forever. Free running elsewhere is fine.
-- Fix: local controller MPPI (Nav2 Humble 1.1.20 binary, `DiffDrive`, 0.4 m/s, 1.0 rad/s, no sideways
+- Fix (`2484e5d`): local controller MPPI (Nav2 Humble 1.1.20 binary, `DiffDrive`, 0.4 m/s, 1.0 rad/s, no sideways
   motion, critics from the Nav2 MPPI documentation) instead of DWB. TEB, the real robot's default, has no Humble binary and
   the vendor did not ship its YAML. Same 6 goals on a clean machine, true final pose from Gazebo: DWB 5/6, MPPI 6/6 (the
   failing goal in 31.5 s over 8.1 m). Also fixed in the same file: `velocity_smoother` clipped to 0.26 m/s while the controller

@@ -7,13 +7,14 @@ navigation (Nav2). ROS 2 Humble, Ubuntu 22.04.
 
 | Part | Status |
 |---|---|
-| Simulation of the robot, checked against the vendor documentation | done: 10/10 spec checks, real-time factor 1.0 |
+| Simulation of the robot, checked against the vendor documentation | done: 13/13 fidelity tests, real-time factor 1.0 |
 | Teleoperation, LiDAR in RViz | done |
 | SLAM and map saving | done: `maps/house`, 99.7% of the walls detected |
-| Nav2 on the saved map, single goal, multi-waypoint missions | done: MPPI controller, 6/6 single goals, 14/14 waypoints; demo video pending |
+| Nav2 on the saved map, single goal, multi-waypoint missions | done: MPPI controller, 6/6 single goals, 28/28 waypoints |
+| Report | done: [`report/report.md`](report/report.md) |
+| Demo video | pending |
 
-The written report (setup, results, defects found in the vendor package, design trade-offs) is in
-[`report/report.md`](report/report.md).
+The short report (setup, results, problems and solutions, trade-offs) is [`report/report.md`](report/report.md).
 
 ## How it works
 
@@ -141,7 +142,7 @@ The simulated robot is checked against the Hiwonder wiki (hardware chapter 1.10,
 ```bash
 python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q    # URDF against the wiki, no simulator needed
 python3 tools/probe_motion.py --speed 0.2 --turn 0.5                      # needs a running simulation, ratios should be 1.00
-python3 tools/probe_collision.py                                          # furnished house: 1 m/s into obstacles, all PASS
+python3 tools/probe_collision.py                                          # furnished house: drives into obstacles, all PASS
 python3 tools/probe_physics.py                                            # empty world: rest, IMU, step, stop, top speed
 ```
 
@@ -162,12 +163,14 @@ robot; image-based inputs have the largest gap. Reasons, evidence and consequenc
 | Single goals, 6 rooms (MPPI / vendor DWB) | 6/6 / 5/6 |
 | Final position error, true pose from Gazebo (MPPI) | mean 0.11 m, max 0.18 m; heading 10-14 deg (goal tolerance 0.25 m, 0.25 rad) |
 | AMCL error at the goal (MPPI) | mean 0.06 m, max 0.11 m, heading within 2.3 deg |
-| Waypoint success rate (2 laps of 7 waypoints) | 14/14 |
-| Time per waypoint | mean 16.0 s (11.5 to 29.6 s), 112 s per lap of 31 m |
+| Waypoints, `waypoints.yaml` (2 laps of 7) | 14/14; mean 16.0 s per waypoint, 112 s per lap of 31 m |
+| Waypoints, `waypoints_extended.yaml` (14, GUI + RViz) | 14/14; 56.6 m in 216 s; final error 0.12 m mean, 0.24 m max (true pose) |
 
 | Gazebo close-up | SLAM in RViz |
 |---|---|
 | ![robot](docs/images/gazebo_rosorin_closeup.png) | ![slam](docs/images/rviz_slam.png) |
+
+![14-waypoint route: true trajectory on the saved map](docs/images/nav_waypoints_extended.png)
 
 Demo video: _pending_.
 
