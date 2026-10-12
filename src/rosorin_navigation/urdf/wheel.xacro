@@ -7,7 +7,7 @@
     0.16 x 0.18 m, different from both
   - wheel mass 0.07 kg (upstream 10 kg each, 40 kg in total; the CAD wheel links weigh 0.07 kg)
   - wheels are frictionless: they carry the weight and spin as commanded (visual and /joint_states),
-    the body is moved by the VelocityControl plugin of rosorin_sim.urdf.xacro. Cylinder wheels
+    the body is moved by the PlanarDrive plugin of rosorin_sim.urdf.xacro. Cylinder wheels
     cannot reproduce mecanum rollers: with upstream mu = 10 the robot cannot move sideways, and
     anisotropic friction (roller axis at 45 degrees) either blocks sideways motion or makes
     turning jerky (measured with tools/probe_motion.py, see docs/DEBUG_LOG.md)

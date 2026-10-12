@@ -9,8 +9,10 @@
     forward speed came out at 0.8x the command and turning at 1.5x)
   - IMU sensor included (upstream loaded the plugin but never declared the sensor, ISSUE-011)
   - sensors and wheels: see lidar.gazebo.xacro, camera.gazebo.xacro, wheel.xacro
-  - VelocityControl moves the body (exact holonomic twist tracking, sideways included);
-    wheels are frictionless and only spin (see wheel.xacro for why)
+  - PlanarDrive (rosorin_gazebo_plugins) moves the body: holonomic twist tracking, sideways
+    included, with the force capped by wheel traction. It replaced VelocityControl, which pushed
+    with unlimited force, climbed furniture and flew off once tilted (ISSUE-016). Wheels are
+    frictionless and only spin (see wheel.xacro for why)
   - total mass about 3.1 kg: the CAD body weighs 0.4 kg, so a 2.4 kg ballast link is added at
     the centre (retail figure for the Standard kit, the wiki does not give a mass)
   - removed the ign_ros2_control plugin (the URDF has no <ros2_control> tag, see ISSUE-009)
@@ -61,11 +63,15 @@
       <tf_topic>/odom/tf</tf_topic>
     </plugin>
 
-    <!-- the body follows the commanded twist (body frame), like the real robot whose wheel
-         controller tracks /controller/cmd_vel; MecanumDrive below still spins the wheels -->
-    <plugin filename="ignition-gazebo-velocity-control-system"
-            name="ignition::gazebo::systems::VelocityControl">
+    <!-- drive: horizontal force and yaw torque tracking /controller/cmd_vel, capped by the wheel
+         traction mu*m*g (rosorin_gazebo_plugins, ISSUE-016); gravity, roll and pitch stay physical.
+         MecanumDrive below only spins the wheels. -->
+    <plugin filename="rosorin_planar_drive" name="rosorin::PlanarDrive">
       <topic>/controller/cmd_vel</topic>
+      <traction_coefficient>0.6</traction_coefficient>
+      <lever_arm>0.174355</lever_arm>
+      <time_constant>0.1</time_constant>
+      <max_tilt>0.5</max_tilt>
     </plugin>
 
     <plugin filename="ignition-gazebo-mecanum-drive-system"
@@ -78,7 +84,10 @@
       <wheelbase>0.17165</wheelbase>
       <wheel_radius>0.04</wheel_radius>
       <topic>/controller/cmd_vel</topic>
-      <odom_topic>/odom</odom_topic>
+      <!-- wheel odometry kept off /odom: the wheels spin freely, so when the robot is blocked this
+           odometry keeps moving; on /odom it interleaved with OdometryPublisher (ISSUE-016) -->
+      <odom_topic>/model/rosorin/wheel_odom</odom_topic>
+      <tf_topic>/model/rosorin/wheel_tf</tf_topic>
       <frame_id>odom</frame_id>
       <child_frame_id>base_link</child_frame_id>
     </plugin>

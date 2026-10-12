@@ -109,6 +109,28 @@ def test_plugin_matches_wheel_geometry(robot):
     assert _near(lever_plugin, lever_wheels, 0.05), (lever_plugin, lever_wheels)
 
 
+def _plugins(robot):
+    """Return the Gazebo plugins declared in the URDF."""
+    return list(robot.iter('plugin'))
+
+
+def test_drive_force_is_traction_limited(robot, ref):
+    """The body is driven by force-limited PlanarDrive, not by velocity override (ISSUE-016)."""
+    names = [p.get('name', '') for p in _plugins(robot)]
+    assert not any(n.endswith('VelocityControl') for n in names), names
+    drive = next(p for p in _plugins(robot) if p.get('name') == 'rosorin::PlanarDrive')
+    assert 0.3 <= float(drive.findtext('traction_coefficient')) <= 1.0
+    lever = float(drive.findtext('lever_arm'))
+    assert _near(lever, ref['drive']['lever_arm'], ref['drive']['tol']), lever
+
+
+def test_single_odom_publisher(robot):
+    """Only one plugin publishes /odom (MecanumDrive wheel odometry used to interleave)."""
+    odom = [p.get('name') for p in _plugins(robot)
+            if (p.findtext('odom_topic') or '').strip() == '/odom']
+    assert len(odom) == 1, odom
+
+
 def test_total_mass_is_plausible(robot, ref):
     """The total mass is in the range of a 3 kg desktop robot, not 40 kg."""
     mass = si.total_mass(robot)
