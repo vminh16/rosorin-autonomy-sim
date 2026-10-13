@@ -13,6 +13,8 @@
     turning jerky (measured with tools/probe_motion.py, see docs/DEBUG_LOG.md)
   - joint damping/friction removed (the velocity command already fixes the wheel speed)
   - removed the malformed kp value "1000000000.0.0" (ignored by the DART engine anyway)
+  - visual: the Hiwonder mecanum wheel mesh (rosorin_description, same 0.04 m radius), so the wheels
+    that turn are the ones on screen; the collision stays a cylinder
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro">
 
@@ -21,12 +23,15 @@
   <xacro:property name="WHEEL_MASS" value="0.07" />
   <xacro:property name="WHEEL_MU" value="0.0" />
 
-  <xacro:macro name="mecanum_wheel" params="name x y">
+  <!-- mesh: CAD wheel mesh; mesh_y: shift that centres it on the axle (the mesh spans y 0..0.038) -->
+  <xacro:macro name="mecanum_wheel" params="name x y mesh mesh_y">
     <link name="${name}_link">
       <visual>
-        <geometry><cylinder radius="${WHEEL_RADIUS}" length="${WHEEL_LENGTH}"/></geometry>
+        <geometry>
+          <mesh filename="file://$(find rosorin_description)/meshes/${mesh}.stl"/>
+        </geometry>
         <material name="black"><color rgba="0 0 0 1"/></material>
-        <origin rpy="1.5707 0 0"/>
+        <origin xyz="0 ${mesh_y} 0"/>
       </visual>
       <collision>
         <geometry><cylinder radius="${WHEEL_RADIUS}" length="${WHEEL_LENGTH}"/></geometry>
@@ -54,9 +59,13 @@
   </xacro:macro>
 
   <!-- x: CAD wheel positions (0.090972 / -0.080677); y: +-0.17706 / 2 -->
-  <xacro:mecanum_wheel name="front_left"  x="0.090972"  y="0.08853"/>
-  <xacro:mecanum_wheel name="front_right" x="0.090972"  y="-0.08853"/>
-  <xacro:mecanum_wheel name="rear_left"   x="-0.080677" y="0.08853"/>
-  <xacro:mecanum_wheel name="rear_right"  x="-0.080677" y="-0.08853"/>
+  <xacro:mecanum_wheel name="front_left"  x="0.090972"  y="0.08853"
+                       mesh="left_front_wheel_link" mesh_y="-0.019"/>
+  <xacro:mecanum_wheel name="front_right" x="0.090972"  y="-0.08853"
+                       mesh="right_front_wheel_link" mesh_y="0.019"/>
+  <xacro:mecanum_wheel name="rear_left"   x="-0.080677" y="0.08853"
+                       mesh="left_back_wheel_link" mesh_y="-0.019"/>
+  <xacro:mecanum_wheel name="rear_right"  x="-0.080677" y="-0.08853"
+                       mesh="right_back_wheel_link" mesh_y="0.019"/>
 
 </robot>

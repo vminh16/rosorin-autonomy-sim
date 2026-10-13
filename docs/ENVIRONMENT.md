@@ -108,8 +108,9 @@ cd ~/research/rosorin-autonomy-sim && source /opt/ros/humble/setup.bash && sourc
 ```
 
 `sim.launch.py` sets what the ROSOrin simulation needs, so nothing else has to be exported:
-`DEPTH_CAMERA_TYPE=aurora` (read by the Hiwonder xacro, default taken from `.typerc`) and `MESA_GL_VERSION_OVERRIDE=4.5`
-(see platform notes). Do not `source .typerc`: it also sets `ROS_DOMAIN_ID` and a `CYCLONEDDS_URI` that points to a file that does
+`DEPTH_CAMERA_TYPE=aurora` (read by the Hiwonder xacro, default taken from `.typerc`), and on WSL2 only
+`MESA_GL_VERSION_OVERRIDE=4.5` with the ogre (v1) GUI (see platform notes). On a native install the GUI uses ogre2 (shadows, PBR
+materials). Do not `source .typerc`: it also sets `ROS_DOMAIN_ID` and a `CYCLONEDDS_URI` that points to a file that does
 not exist on this machine.
 
 ## 5. Vendor simulation source
@@ -140,8 +141,8 @@ Differences that matter on **WSL2 (WSLg)**; none of them applies to a native Ubu
 | Distro | `wsl --install -d Ubuntu-22.04` | the default distro is 24.04, which has no Humble packages (ISSUE-001) |
 | Memory | `%UserProfile%\.wslconfig`: `[wsl2]` `memory=8GB` (12GB and `processors=6` used here), then `wsl --shutdown` | the default allocation was too small (ISSUE-003) |
 | GPU | `export MESA_D3D12_DEFAULT_ADAPTER_NAME=NVIDIA` in `~/.bashrc`; check with `glxinfo -B \| grep -i renderer` | WSLg picked the integrated Intel GPU: 5.8 FPS instead of 61 (ISSUE-003) |
-| OpenGL version | handled by `sim.launch.py` (`MESA_GL_VERSION_OVERRIDE=4.5`) | Mesa D3D12 reports OpenGL 4.2 and ogre2 aborts (ISSUE-007) |
-| GUI render engine | handled by `sim.launch.py` (`gui_render_engine:=ogre`) | ogre2 renders textured meshes black on Mesa D3D12 (ISSUE-008) |
+| OpenGL version | handled by `sim.launch.py` (sets `MESA_GL_VERSION_OVERRIDE=4.5` when it detects WSL2) | Mesa D3D12 reports OpenGL 4.2 and ogre2 aborts (ISSUE-007) |
+| GUI render engine | handled by `sim.launch.py` (`gui_render_engine:=auto` picks ogre on WSL2, ogre2 elsewhere) | ogre2 renders textured meshes black on Mesa D3D12 (ISSUE-008) |
 
 ## 7. Smoke test
 

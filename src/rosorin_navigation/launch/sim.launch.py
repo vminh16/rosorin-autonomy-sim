@@ -5,9 +5,10 @@ Fixed copy of robot_gazebo/launch/{worlds,room_worlds,spwan_model,ros_ign_bridge
 from the Hiwonder ROSOrin Pro simulation package (wiki 9_Gazebo_Simulation,
 .typerc V1.0.0 2025-05-29). Upstream files are left untouched in src/simulations/. Changes:
   - drop get_package_share_directory('holonomic_sim'): not shipped, crashes the launch
-  - GUI uses ogre (v1): ogre2 renders all textured meshes black on WSL2 D3D12 Mesa
-  - MESA_GL_VERSION_OVERRIDE=4.5: Mesa D3D12 reports GL 4.2, ogre2 sensor rendering
-    aborts without it
+  - GUI render engine: ogre2 on a native install (shadows, PBR materials); on WSL2 ogre (v1),
+    because ogre2 renders all textured meshes black on D3D12 Mesa (gui_render_engine:=auto)
+  - MESA_GL_VERSION_OVERRIDE=4.5 on WSL2 only: Mesa D3D12 reports GL 4.2, ogre2 sensor
+    rendering aborts without it
   - no ros2_control_node / joint_state_broadcaster: the URDF has no <ros2_control> tag,
     so both fail; /joint_states already comes from the Ignition JointStatePublisher system
   - no joint_state_publisher: it republished /joint_states onto itself
@@ -57,6 +58,15 @@ FURNITURE = [
 ]
 
 
+def running_on_wsl():
+    """Return True inside WSL2, whose D3D12 Mesa driver needs the ogre (v1) GUI."""
+    try:
+        with open('/proc/sys/kernel/osrelease') as f:
+            return 'microsoft' in f.read().lower()
+    except OSError:
+        return False
+
+
 def static_model_xml(model_file):
     """Return the URDF model as a static body with absolute mesh paths."""
     model_dir = os.path.dirname(model_file)
@@ -83,6 +93,9 @@ def spawn_furniture(robot_gazebo):
 def launch_setup(context):
     world = LaunchConfiguration('world').perform(context)
     gui_engine = LaunchConfiguration('gui_render_engine').perform(context)
+    wsl = running_on_wsl()
+    if gui_engine == 'auto':
+        gui_engine = 'ogre' if wsl else 'ogre2'
     static_map_tf = LaunchConfiguration('static_map_tf').perform(context) == 'true'
     x, y, yaw = (LaunchConfiguration(k).perform(context) for k in ('x', 'y', 'yaw'))
     gui = LaunchConfiguration('gui').perform(context) == 'true'
@@ -141,8 +154,8 @@ def launch_setup(context):
         remappings=[('/odom/tf', '/tf'), ('/controller/cmd_vel', '/cmd_vel')],
         parameters=[{'use_sim_time': True}])
 
-    actions = [
-        SetEnvironmentVariable('MESA_GL_VERSION_OVERRIDE', '4.5'),
+    actions = [SetEnvironmentVariable('MESA_GL_VERSION_OVERRIDE', '4.5')] if wsl else []
+    actions += [
         SetEnvironmentVariable('DEPTH_CAMERA_TYPE', os.environ.get('DEPTH_CAMERA_TYPE', 'aurora')),
         ign, robot_state_publisher, spawn_robot, bridge,
     ]
@@ -161,8 +174,8 @@ def generate_launch_description():
     return LaunchDescription([
         DeclareLaunchArgument('world', default_value='robocup_home',
                               description='robocup_home (furnished house) or empty'),
-        DeclareLaunchArgument('gui_render_engine', default_value='ogre',
-                              description='ogre (works on WSL2) or ogre2'),
+        DeclareLaunchArgument('gui_render_engine', default_value='auto',
+                              description='auto (ogre2, or ogre on WSL2), ogre or ogre2'),
         DeclareLaunchArgument('static_map_tf', default_value='false',
                               description='publish map->odom identity; only without SLAM/AMCL'),
         DeclareLaunchArgument('gui', default_value='true', description='false = server only'),

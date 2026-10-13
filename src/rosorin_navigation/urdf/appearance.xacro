@@ -1,0 +1,38 @@
+<?xml version="1.0"?>
+<!--
+  Colours of the ROSOrin Pro, from the product photo of the Hiwonder wiki (chapter 1.2, "Install the
+  Depth Camera"): silver aluminium body, black LiDAR and microphone, black mecanum rollers (the wheel
+  mesh is one piece, so the white hubs cannot be coloured separately), silver Aurora930 housing.
+  Looks only: no mass, collision or sensor changes. The pbr blocks are used by ogre2; ogre (v1, WSL2)
+  uses the plain colours.
+-->
+<robot xmlns:xacro="http://ros.org/wiki/xacro">
+
+  <xacro:macro name="look" params="link rgb metalness roughness">
+    <gazebo reference="${link}">
+      <visual>
+        <material>
+          <ambient>${rgb} 1</ambient>
+          <diffuse>${rgb} 1</diffuse>
+          <specular>0.3 0.3 0.3 1</specular>
+          <pbr>
+            <metal>
+              <metalness>${metalness}</metalness>
+              <roughness>${roughness}</roughness>
+            </metal>
+          </pbr>
+        </material>
+      </visual>
+    </gazebo>
+  </xacro:macro>
+
+  <xacro:look link="base_link"    rgb="0.80 0.81 0.83" metalness="0.25" roughness="0.45"/>
+  <xacro:look link="camera_link0" rgb="0.86 0.87 0.89" metalness="0.25" roughness="0.45"/>
+  <xacro:look link="lidar_frame"  rgb="0.06 0.06 0.07" metalness="0.1" roughness="0.6"/>
+  <xacro:look link="mic_link"     rgb="0.06 0.06 0.07" metalness="0.1" roughness="0.6"/>
+  <xacro:look link="front_left_link"  rgb="0.09 0.09 0.10" metalness="0.0" roughness="0.8"/>
+  <xacro:look link="front_right_link" rgb="0.09 0.09 0.10" metalness="0.0" roughness="0.8"/>
+  <xacro:look link="rear_left_link"   rgb="0.09 0.09 0.10" metalness="0.0" roughness="0.8"/>
+  <xacro:look link="rear_right_link"  rgb="0.09 0.09 0.10" metalness="0.0" roughness="0.8"/>
+
+</robot>

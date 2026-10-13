@@ -3,7 +3,7 @@
 Simulation of the **Hiwonder ROSOrin Pro** mecanum robot in Ignition Gazebo (Fortress), with LiDAR SLAM and autonomous
 navigation (Nav2). ROS 2 Humble, Ubuntu 22.04.
 
-![ROSOrin Pro in the house world](docs/images/gazebo_robocup_home.png)
+![ROSOrin Pro in the house world](docs/images/gazebo_house_ogre2.png)
 
 | Part | Status |
 |---|---|
@@ -67,7 +67,7 @@ ros2 launch rosorin_navigation sim.launch.py world:=empty    # empty world
 ```
 
 Useful arguments: `furniture:=false`, `camera:=false` (do not bridge the RGB camera), `gui:=false` (server only),
-`x:= y:= yaw:=` (spawn pose). Check the simulator is healthy (real-time factor about 1.0 with nothing else running):
+`x:= y:= yaw:=` (spawn pose), `gui_render_engine:=ogre2|ogre` (default `auto`: ogre2, or ogre on WSL2). Check the simulator is healthy (real-time factor about 1.0 with nothing else running):
 
 ```bash
 ign topic -e -t /stats -n 30 | grep real_time_factor
@@ -169,7 +169,7 @@ robot; image-based inputs have the largest gap. Reasons, evidence and consequenc
 
 | Gazebo close-up | SLAM in RViz |
 |---|---|
-| ![robot](docs/images/gazebo_rosorin_closeup.png) | ![slam](docs/images/rviz_slam.png) |
+| ![robot](docs/images/gazebo_rosorin_ogre2.png) | ![slam](docs/images/rviz_slam.png) |
 
 ![14-waypoint route: true trajectory on the saved map](docs/images/nav_waypoints_extended.png)
 
@@ -215,7 +215,7 @@ COMMANDS.md  CHANGELOGS.md
 | Robot turns back and forth in place, `Failed to make progress` (DWB) | vendor DWB critics on a U-shaped path (ISSUE-018) | use `config/nav2_params.yaml` of this package (MPPI) |
 | Map is huge and mostly unknown | the robot left the house through the wall openings | restart the simulation, keep the robot inside |
 | RViz smeared while driving (Nav2 view) | AMCL particle cloud redrawn each frame | `rviz2 -d src/rosorin_navigation/rviz/nav2_clean.rviz --ros-args -p use_sim_time:=true` |
-| Gazebo aborts with `OGRE EXCEPTION ... GL3PlusTextureGpu::copyTo`, or furniture is black (Mesa D3D12, e.g. WSL2) | Mesa reports OpenGL 4.2; ogre2 GUI problem | handled by `sim.launch.py` (`MESA_GL_VERSION_OVERRIDE=4.5`, GUI engine `ogre`) |
+| Gazebo aborts with `OGRE EXCEPTION ... GL3PlusTextureGpu::copyTo`, or furniture is black (Mesa D3D12, e.g. WSL2) | Mesa reports OpenGL 4.2; ogre2 GUI problem | handled by `sim.launch.py`: on WSL2 it sets `MESA_GL_VERSION_OVERRIDE=4.5` and the GUI engine `ogre` (`gui_render_engine:=auto`) |
 
 All problems met, with causes and fixes: [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md). Release notes: [`CHANGELOGS.md`](CHANGELOGS.md).
 

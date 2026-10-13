@@ -1,6 +1,12 @@
 <?xml version="1.0" ?>
 <!-- Copy of robot_gazebo/worlds/robocup_home.sdf (Hiwonder ROSOrin Pro, V1.0.0 2025-05-29).
-     Change: physics max_step_size 0.03 -> 0.01 s (100 Hz) for smoother motion. -->
+     Changes:
+     - physics max_step_size 0.03 -> 0.01 s (100 Hz) for smoother motion
+     - looks only (no collision, physics or LiDAR change): ambient light 1.0 -> 0.45 (everything was flat
+       white), sky, low wall specular, a wooden floor inside the house (visual only) and a darker ground
+       outside so that leaving the house is visible (drawn 2 cm low: no
+       flicker against the floor; the collision plane stays at z = 0), start view over the whole house, GUI far clip 25000 -> 300 m
+       (the floor flickered: not enough depth precision) -->
 <sdf version="1.6">
   <world name="robot_world">
     <physics name="1ms" type="ignored">
@@ -33,12 +39,12 @@
             </gz-gui>
             <engine>ogre2</engine>
             <scene>scene</scene>
-            <ambient_light>0.4 0.4 0.4</ambient_light>
-            <background_color>0.8 0.8 0.8</background_color>
-            <camera_pose>-3.5 0 6 0 1.27 0</camera_pose>
+            <ambient_light>0.45 0.45 0.45</ambient_light>
+            <background_color>0.72 0.80 0.88</background_color>
+            <camera_pose>-6.5 -5.5 6.5 0 0.65 0.70</camera_pose>
             <camera_clip>
-              <near>0.25</near>
-              <far>25000</far>
+              <near>0.05</near>
+              <far>300</far>
             </camera_clip>
           </plugin>
           
@@ -275,13 +281,15 @@
 
     </gui>
     <scene>
-      <ambient>1.0 1.0 1.0</ambient>
-      <background>0.8 0.8 0.8</background>
+      <ambient>0.45 0.45 0.45</ambient>
+      <background>0.72 0.80 0.88</background>
+      <sky></sky>
+      <shadows>true</shadows>
     </scene>
     <light type="directional" name="sun">
       <cast_shadows>true</cast_shadows>
       <pose>0 0 10 0 0 0</pose>
-      <diffuse>0.8 0.8 0.8 1</diffuse>
+      <diffuse>0.9 0.88 0.82 1</diffuse>
       <specular>0.2 0.2 0.2 1</specular>
       <attenuation>
         <range>1000</range>
@@ -304,6 +312,7 @@
           </geometry>
         </collision>
         <visual name="visual">
+          <pose>0 0 -0.02 0 0 0</pose>
           <geometry>
             <plane>
               <normal>0 0 1</normal>
@@ -311,13 +320,35 @@
             </plane>
           </geometry>
           <material>
-            <ambient>0.94 0.90 0.81 1</ambient>
-            <diffuse>0.94 0.90 0.81 1</diffuse>
-            <specular>1 1 1 0</specular>
+            <ambient>0.50 0.55 0.47 1</ambient>
+            <diffuse>0.50 0.55 0.47 1</diffuse>
+            <specular>0.05 0.05 0.05 1</specular>
           </material>
         </visual>
       </link>
     </model>
+
+    <!-- floor of the house, visual only (no collision): the ground plane below carries the robot -->
+    <model name="house_floor">
+      <static>true</static>
+      <pose>0 0 0.002 0 0 0</pose>
+      <link name="link">
+        <visual name="visual">
+          <cast_shadows>false</cast_shadows>  <!-- it shadowed itself: striped floor -->
+          <geometry>
+            <box>
+              <size>10.1 8.1 0.002</size>
+            </box>
+          </geometry>
+          <material>
+            <ambient>0.76 0.62 0.45 1</ambient>
+            <diffuse>0.76 0.62 0.45 1</diffuse>
+            <specular>0.15 0.15 0.15 1</specular>
+          </material>
+        </visual>
+      </link>
+    </model>
+
     <model name='RoboCup_Home'>
       <pose frame=''>0.0595 -0.023998 0 0 -0 0</pose>
       <link name='Wall_10'>
@@ -350,9 +381,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>5.0505 0.004498 0 0 -0 1.5708</pose>
@@ -390,9 +421,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>-5.0505 -2.5495 0 0 -0 1.5708</pose>
@@ -430,9 +461,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>-5.0505 2.045 0 0 0 -1.5708</pose>
@@ -470,9 +501,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>-1.305 4.024 0 0 -0 0</pose>
@@ -510,9 +541,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>4.3355 4.024 0 0 -0 3.14159</pose>
@@ -550,9 +581,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>-2.991 0.456998 0 0 -0 0</pose>
@@ -590,9 +621,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>-0.9895 0.652498 0 0 -0 1.5708</pose>
@@ -630,9 +661,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>-0.9895 2.9875 0 0 0 -1.5708</pose>
@@ -670,9 +701,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>2.975 -0.456001 0 0 -0 3.14159</pose>
@@ -710,9 +741,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>0.9605 -0.651002 0 0 0 -1.5708</pose>
@@ -750,9 +781,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>0.9605 -3.005 0 0 -0 1.5708</pose>
@@ -790,9 +821,9 @@
             </box>
           </geometry>
           <material>
-            <ambient>0.8 0.8 0.8 1</ambient>
-            <diffuse>0.8 0.8 0.8 1</diffuse>
-            <specular>0.8 0.8 0.8 1</specular>
+            <ambient>0.93 0.91 0.86 1</ambient>
+            <diffuse>0.93 0.91 0.86 1</diffuse>
+            <specular>0.1 0.1 0.1 1</specular>
           </material>
         </visual>
         <pose frame=''>0 -4.015 0 0 -0 0</pose>
