@@ -125,6 +125,14 @@ repository, unmodified:
 
 ## 6. Platform notes
 
+Hybrid-GPU laptops (Intel + NVIDIA, `prime-select query` prints `on-demand`): applications render on the Intel GPU by
+default. The simulation works there, but to use the NVIDIA GPU start it with PRIME offload (checked with `nvidia-smi`, which then
+lists `ign gazebo server` and `ign gazebo gui`):
+
+```bash
+__NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ros2 launch rosorin_navigation sim.launch.py
+```
+
 Differences that matter on **WSL2 (WSLg)**; none of them applies to a native Ubuntu install.
 
 | Topic | What to do | Why |

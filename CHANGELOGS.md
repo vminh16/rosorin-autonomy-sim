@@ -5,6 +5,13 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 
 ## [Unreleased]
 
+## 2026-10-14 — Reproduction on a new machine
+
+| Task | Bug | Result | Commit |
+|---|---|---|---|
+| Clean rebuild on native Ubuntu 22.04 | `build.sh` used `--merge-install`, the README not: colcon refused to build; `test.sh` failed on the vendored code (flake8); devcontainer on Ubuntu 26.04 (no Humble) | build 4/4, 24 tests 0 failures, sim + `probe_motion.py` 1.00; clean-rebuild guide in `docs/ENVIRONMENT.md` | `a480092` |
+| SLAM RViz view | listed the vendor model's links (gripper, servos) | links of the simulated robot | `d881c4f` |
+
 ## 2026-10-12 — Re-check against the real documentation, navigation
 
 | Task | Bug | Result | Commit |
