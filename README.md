@@ -186,16 +186,20 @@ src/
   simulations/             # Hiwonder ROSOrin Pro simulation, vendored unmodified (robot_gazebo, rosorin_description)
   rosorin_gazebo_plugins/  # PlanarDrive: traction-limited drive for the robot body (Gazebo system plugin, C++)
   rosorin_navigation/      # this project's package
-    rosorin_navigation/    #   waypoint_follower.py (nav2_simple_commander, CSV log per run)
+    rosorin_navigation/    #   waypoint_follower.py (nav2_simple_commander, CSV log per run);
+                           #   realism:=true nodes: wheel_odometry.py (/odom_raw), scan_noise.py (COIN-D6 noise)
     launch/                #   sim.launch.py (Gazebo + robot + bridge), slam.launch.py (slam_toolbox + RViz),
                            #   navigation.launch.py (map_server + AMCL + Nav2 + RViz)
-    urdf/                  #   fixed copy of the Hiwonder robot model (wheels, LiDAR, camera, IMU, drive)
-    worlds/                #   house world with a 10 ms physics step
-    config/                #   nav2_params.yaml (MPPI), waypoints.yaml, wiki_reference.yaml (real-robot values for the tests)
+    urdf/                  #   fixed copy of the Hiwonder robot model (wheels, LiDAR, camera, IMU, drive),
+                           #   pro_upper.xacro (deck, arm, screen, wrist camera), appearance.xacro (colours)
+    worlds/                #   house world with a 10 ms physics step, lighting and floor
+    config/                #   nav2_params.yaml (MPPI), waypoints.yaml, ekf.yaml (realism:=true),
+                           #   wiki_reference.yaml (real-robot values for the tests)
     rviz/                  #   SLAM and Nav2 views
-    test/                  #   fidelity tests (URDF against the wiki) and lint
+    test/                  #   fidelity tests (URDF against the wiki), realism node tests, lint
 tools/probe_motion.py      # commanded versus achieved velocity from Gazebo ground truth
 tools/probe_collision.py   # drives into walls and furniture, checks the robot stays flat
+tools/probe_physics.py     # rest, IMU, step response, stop, top speed
 maps/                      # saved maps
 results/nav_runs/          # navigation run logs (CSV)
 report/                    # written report

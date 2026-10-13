@@ -4,8 +4,9 @@
   2025-05-29): same link, topic and 50 Hz rate. Change: with realism:=true the readings get noise and
   a gyro bias.
   - accelerometer: stddev 0.02 m/s^2, from the covariance the real driver reports (0.0004, wiki 2.1.4.2)
-  - gyroscope: stddev 0.0013 rad/s (QMI8658 noise density 15 mdps/sqrt(Hz) at 25 Hz bandwidth; the
-    wiki's resting sample reads about 0.001 rad/s), bias drawn once with stddev 0.0005 rad/s (residual
+  - gyroscope: stddev 0.0013 rad/s (QMI8658 noise density 13 mdps/sqrt(Hz) for the A/B parts, 15 for
+    the C part, QST datasheets; 15 at 25 Hz bandwidth gives 0.0013; the board photo does not show the
+    suffix; the wiki's resting sample reads about 0.001 rad/s), bias drawn once with stddev 0.0005 rad/s (residual
     after the 6-position calibration of wiki 2.1.1; the wiki gives no number, this is an assumption)
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="robot_imu">
