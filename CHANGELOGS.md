@@ -14,6 +14,7 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 | Simulator looks on native Ubuntu | GUI forced to ogre (v1) for WSL2; ambient light 1.0 made the scene flat white; the mecanum wheel meshes were fixed to the body and never turned | ogre2 with shadows and sky, wooden floor, robot coloured as the wiki photo, wheels turn on screen; RTF 1.0, probes and 24 tests unchanged | `05c5e73` |
 | ROSOrin Pro upper part | the Hiwonder CAD is the plain ROSOrin: no deck, arm or screen, camera on the chassis front | deck, 6DOF arm, screen drawn from the wiki photo (visual only); camera on the wrist; /scan unchanged | `160663e` |
 | Realism mode, RGB-D camera | odometry was the true pose, sensor noise one fixed value, no depth stream | `realism:=true`: encoder odometry + IMU in a robot_localization EKF as on the robot, COIN-D6 range noise, IMU noise; `depth:=true`; Nav2 7/7 and SLAM work, default mode unchanged | `756c67e` |
+| Autonomous mapping | mapping needed driving by hand | `navigation.launch.py slam:=true` + `waypoint_follower localizer:=slam`: 7/7 rooms in 112 s, map 203 x 162 | `002d605` |
 
 ## 2026-10-12 — Re-check against the real documentation, navigation
 
