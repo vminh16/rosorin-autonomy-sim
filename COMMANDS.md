@@ -6,6 +6,7 @@ Test machine: Ubuntu 22.04.5 (WSL2), ROS 2 Humble, Ignition Gazebo 6.18 (Fortres
 
 | Date | Step | Command | Result |
 |---|---|---|---|
+| 2026-10-14 | Clean rebuild, native Ubuntu 22.04 | `rm -rf build install log && ./build.sh && source install/setup.bash && ./test.sh` | 4 packages build; 24 tests, 0 failures; 13 fidelity tests pass; `sim.launch.py` with GUI and headless, `probe_motion.py` ratios 1.00 / 1.00 / 1.00 |
 | 2026-10-12 | Build | `colcon build --symlink-install` | 4 packages (`robot_gazebo`, `rosorin_description`, `rosorin_gazebo_plugins`, `rosorin_navigation`) build; source `install/setup.bash` again afterwards so Gazebo finds the drive plugin |
 | 2026-10-12 | Package tests | `colcon test --packages-select rosorin_gazebo_plugins rosorin_navigation && colcon test-result` | 24 tests, 0 failures (fidelity, flake8, pep257, uncrustify, lint_cmake, xmllint) |
 | 2026-10-12 | Simulation | `ros2 launch rosorin_navigation sim.launch.py` | Robot and 17 static furniture models in `robocup_home`, RTF 1.000 |

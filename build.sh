@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
-# Set the default build type
+# Same layout as the README (`colcon build --symlink-install`, isolated install/<pkg>/).
+# Do not add --merge-install: colcon refuses to mix layouts in one install/ directory
+# ("The install directory 'install' was created with the layout 'merged'").
 BUILD_TYPE=RelWithDebInfo
 colcon build \
-        --merge-install \
         --symlink-install \
         --cmake-args "-DCMAKE_BUILD_TYPE=$BUILD_TYPE" "-DCMAKE_EXPORT_COMPILE_COMMANDS=On" \
         -Wall -Wextra -Wpedantic

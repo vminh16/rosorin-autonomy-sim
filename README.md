@@ -42,7 +42,8 @@ git clone https://github.com/vminh16/rosorin-autonomy-sim.git ~/research/rosorin
 cd ~/research/rosorin-autonomy-sim
 source /opt/ros/humble/setup.bash      # ROS 2 Humble installed first, see docs/ENVIRONMENT.md
 ./setup.sh                             # rosdep: installs the dependencies declared in the package.xml files
-colcon build --symlink-install
+colcon build --symlink-install         # or ./build.sh; do not run inside a conda env
+source install/setup.bash              # in every new terminal, before ros2 launch / ros2 run
 ```
 
 ## Usage
@@ -202,6 +203,8 @@ COMMANDS.md  CHANGELOGS.md
 
 | Symptom | Cause | Fix |
 |---|---|---|
+| `Package 'rosorin_navigation' not found` | workspace not sourced in this terminal | `source install/setup.bash` (every new terminal) |
+| `install directory ... created with the layout 'merged'`, or any odd build error | build artifacts from a different build command, or a conda env active | `conda deactivate; rm -rf build install log`, then build again ([clean rebuild](docs/ENVIRONMENT.md#8-clean-rebuild)) |
 | `package 'holonomic_sim' not found` | bug in the Hiwonder `worlds.launch.py` / `room_worlds.launch.py` | use `rosorin_navigation sim.launch.py` |
 | Robot does not move at the commanded speed, cannot strafe | wrong drive constants in the Hiwonder URDF (ISSUE-013) | use the fixed URDF (default in `sim.launch.py`) |
 | Robot does not move at all, `/odom` silent or static | the drive plugin was not found: workspace not sourced after a build | `source install/setup.bash` (sets `IGN_GAZEBO_SYSTEM_PLUGIN_PATH`), restart the simulation |

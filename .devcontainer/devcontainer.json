@@ -1,6 +1,6 @@
 {
 	"name": "ROS 2 Workspace",
-	"image": "mcr.microsoft.com/devcontainers/base:ubuntu26.04",
+	"image": "mcr.microsoft.com/devcontainers/base:jammy",
 	"features": {
 		// For CUDA support uncomment the following line.
 		// "ghcr.io/devcontainers/features/nvidia-cuda:3": {

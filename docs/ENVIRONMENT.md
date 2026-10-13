@@ -1,6 +1,6 @@
 # Environment setup
 
-Tested on **Ubuntu 22.04.5 LTS** with **ROS 2 Humble**, Ignition Gazebo 6 (Fortress) for the ROSOrin Pro, Gazebo Classic 11
+Tested on **Ubuntu 22.04.5 LTS** (WSL2, and native with an NVIDIA driver) with **ROS 2 Humble**, Ignition Gazebo 6 (Fortress) for the ROSOrin Pro, Gazebo Classic 11
 for the TurtleBot3 baseline, and an NVIDIA RTX 2050. Ubuntu 22.04 is required: ROS 2 Humble binaries do not exist for
 24.04. The same steps work on a native install and inside a WSL2 distro; the few differences are in
 [Platform notes](#6-platform-notes). Problems met during setup are logged in [`DEBUG_LOG.md`](DEBUG_LOG.md).
@@ -32,7 +32,7 @@ sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8
 export LANG=en_US.UTF-8
 
 # ROS 2 apt repository
-sudo apt install -y software-properties-common curl
+sudo apt install -y software-properties-common curl git
 sudo add-apt-repository universe
 export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
 curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
@@ -95,6 +95,12 @@ export TURTLEBOT3_MODEL=burger                    # lighter than waffle
 export GAZEBO_MODEL_PATH=$GAZEBO_MODEL_PATH:/opt/ros/humble/share/turtlebot3_gazebo/models
 ```
 
+Do not build or run inside a conda environment (`conda deactivate`, and `conda config --set auto_activate false`
+if conda is installed; `auto_activate_base` on conda older than 25): `which python3` must print `/usr/bin/python3`, otherwise colcon and the launch files pick up conda's
+Python, which has no `rclpy`, `catkin_pkg` or `em`. If the desktop language is not English, numbers may be formatted with a
+decimal comma (`locale | grep LC_NUMERIC` shows e.g. `vi_VN`); add `export LC_NUMERIC=en_US.UTF-8` to `~/.bashrc` so that
+every ROS and Gazebo tool parses `0.08` as a number.
+
 Source the workspace by hand in every terminal after a build (not from `.bashrc`, to avoid sourcing a stale build):
 
 ```bash
@@ -134,6 +140,34 @@ Differences that matter on **WSL2 (WSLg)**; none of them applies to a native Ubu
 ```bash
 printenv ROS_DISTRO                                   # humble
 ros2 pkg list | grep -E 'nav2_bringup|slam_toolbox|ros_gz_bridge|robot_gazebo|rosorin_navigation'
-python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q    # 10 passed, no simulator needed
+python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q    # 13 passed, no simulator needed
 ros2 launch rosorin_navigation sim.launch.py          # Gazebo opens, the ROSOrin appears in the house
 ```
+
+## 8. Clean rebuild
+
+If a build or launch fails after switching branches, moving the repository, or mixing build commands, delete the build
+artifacts and start again. They are generated files only (ignored by git); nothing in `src/` is touched.
+
+```bash
+cd ~/research/rosorin-autonomy-sim
+pkill -f "ign gazebo"; pkill -x rviz2; pkill -f parameter_bridge   # stop any running simulation
+conda deactivate 2>/dev/null; which python3                         # must be /usr/bin/python3
+rm -rf build install log                                            # build artifacts only
+source /opt/ros/humble/setup.bash
+./setup.sh                                                          # re-check the dependencies
+colcon build --symlink-install                                      # or ./build.sh (same layout)
+source install/setup.bash                                           # in EVERY new terminal
+python3 -m pytest src/rosorin_navigation/test/test_sim_fidelity.py -q
+ros2 launch rosorin_navigation sim.launch.py
+```
+
+Typical errors and their cause:
+
+| Error | Cause |
+|---|---|
+| `Package 'rosorin_navigation' not found` | `install/setup.bash` not sourced in this terminal |
+| `The install directory 'install' was created with the layout 'merged'` | an older `build.sh` used `--merge-install`; `rm -rf build install log` and rebuild |
+| `ROS_DISTRO is not set` from `./setup.sh` | `/opt/ros/humble/setup.bash` not sourced |
+| `ModuleNotFoundError: No module named 'catkin_pkg'` / `'em'` / `'rclpy'` | a conda environment is active |
+| `./test.sh` shows flake8 failures in `robot_gazebo` / `rosorin_description` | plain `colcon test` also tests the vendored Hiwonder code; `./test.sh` tests only this project's packages (24 tests) |
