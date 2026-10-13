@@ -1,9 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
   ROSOrin Pro body: copy of rosorin_description/urdf/rosorin.xacro (Hiwonder, V1.0.0 2025-05-29).
-  Only change: the four CAD wheel links keep their mass and collision but lose their visual. Their
-  joints are fixed, so the mecanum wheel meshes never turned; the meshes are now the visuals of the
-  spinning wheel links in wheel.xacro. Colours are set in appearance.xacro.
+  Changes:
+  - the four CAD wheel links keep their mass and collision but lose their visual. Their joints are
+    fixed, so the mecanum wheel meshes never turned; the meshes are now the visuals of the spinning
+    wheel links in wheel.xacro. Colours are set in appearance.xacro.
+  - no camera on the chassis front (that is the non-Pro ROSOrin): the Pro's camera is on the arm
+    wrist, pro_upper.xacro
 -->
 <robot name="car" xmlns:xacro="http://ros.org/wiki/xacro" >
   <xacro:property name="camera_type"    value="$(env DEPTH_CAMERA_TYPE)"/>
@@ -326,10 +329,6 @@
     <parent link="lidar_frame" />
     <child link="lidar_sim_frame" />
   </joint>
-  <xacro:if value="${camera_type == 'AsCamera' or camera_type == 'aurora'}">
-    <xacro:include filename="$(find rosorin_description)/urdf/ascamera.xacro"/>
-  </xacro:if>
-  <xacro:if value="${camera_type == 'Dabai'}">
-    <xacro:include filename="$(find rosorin_description)/urdf/dabai.xacro"/>
-  </xacro:if>
+  <!-- camera (ascamera.xacro / dabai.xacro) not included: the ROSOrin Pro carries its Aurora930 on the
+       arm wrist, see pro_upper.xacro -->
 </robot>
