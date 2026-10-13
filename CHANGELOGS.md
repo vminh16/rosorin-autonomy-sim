@@ -12,6 +12,8 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 | Clean rebuild on native Ubuntu 22.04 | `build.sh` used `--merge-install`, the README not: colcon refused to build; `test.sh` failed on the vendored code (flake8); devcontainer on Ubuntu 26.04 (no Humble) | build 4/4, 24 tests 0 failures, sim + `probe_motion.py` 1.00; clean-rebuild guide in `docs/ENVIRONMENT.md` | `a480092` |
 | SLAM RViz view | listed the vendor model's links (gripper, servos) | links of the simulated robot | `d881c4f` |
 | Simulator looks on native Ubuntu | GUI forced to ogre (v1) for WSL2; ambient light 1.0 made the scene flat white; the mecanum wheel meshes were fixed to the body and never turned | ogre2 with shadows and sky, wooden floor, robot coloured as the wiki photo, wheels turn on screen; RTF 1.0, probes and 24 tests unchanged | `05c5e73` |
+| ROSOrin Pro upper part | the Hiwonder CAD is the plain ROSOrin: no deck, arm or screen, camera on the chassis front | deck, 6DOF arm, screen drawn from the wiki photo (visual only); camera on the wrist; /scan unchanged | `160663e` |
+| Realism mode, RGB-D camera | odometry was the true pose, sensor noise one fixed value, no depth stream | `realism:=true`: encoder odometry + IMU in a robot_localization EKF as on the robot, COIN-D6 range noise, IMU noise; `depth:=true`; Nav2 7/7 and SLAM work, default mode unchanged | `756c67e` |
 
 ## 2026-10-12 — Re-check against the real documentation, navigation
 
