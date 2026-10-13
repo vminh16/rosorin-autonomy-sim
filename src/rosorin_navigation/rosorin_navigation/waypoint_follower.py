@@ -13,6 +13,8 @@ Copyright 2021 Samsung Research America, Apache-2.0). Changes:
     (integrated from /odom) and the final pose from TF map -> base_footprint, written to
     <output_dir>/<YYYYmmdd-HHMMSS>.csv
   - no preemption demo; a single timeout for the whole route
+  - localizer:=slam drives while slam_toolbox maps (navigation.launch.py slam:=true): no AMCL to
+    wait for, poses are in the map frame SLAM publishes
 
 Run with Nav2 up (navigation.launch.py):
   ros2 run rosorin_navigation waypoint_follower --ros-args \
@@ -99,6 +101,7 @@ def main():
     output_dir = navigator.declare_parameter('output_dir', 'results/nav_runs').value
     timeout_s = navigator.declare_parameter('timeout', 900.0).value
     set_initial = navigator.declare_parameter('set_initial_pose', False).value
+    localizer = navigator.declare_parameter('localizer', 'amcl').value
     initial = [navigator.declare_parameter(n, 0.0).value
                for n in ('initial_x', 'initial_y', 'initial_yaw')]
 
@@ -108,13 +111,18 @@ def main():
     tf_buffer = tf2_ros.Buffer()
     tf2_ros.TransformListener(tf_buffer, navigator)
 
-    if set_initial:
-        navigator.setInitialPose(make_pose(navigator, 'map', *initial))
+    if localizer == 'slam':
+        # no AMCL: wait for bt_navigator only (Humble's waitUntilNav2Active always waits for the
+        # localizer node and, for 'amcl', for an initial pose)
+        navigator.waitUntilNav2Active(localizer='bt_navigator')
     else:
-        navigator.info('Waiting for the current AMCL pose (set_initial_pose is false)')
-        while rclpy.ok() and not navigator.initial_pose_received:
-            rclpy.spin_once(navigator, timeout_sec=0.5)
-    navigator.waitUntilNav2Active()
+        if set_initial:
+            navigator.setInitialPose(make_pose(navigator, 'map', *initial))
+        else:
+            navigator.info('Waiting for the current AMCL pose (set_initial_pose is false)')
+            while rclpy.ok() and not navigator.initial_pose_received:
+                rclpy.spin_once(navigator, timeout_sec=0.5)
+        navigator.waitUntilNav2Active()
 
     def robot_pose():
         try:

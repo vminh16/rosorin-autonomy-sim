@@ -6,6 +6,7 @@ Test machine: Ubuntu 22.04.5 (WSL2), ROS 2 Humble, Ignition Gazebo 6.18 (Fortres
 
 | Date | Step | Command | Result |
 |---|---|---|---|
+| 2026-10-14 | Autonomous mapping | `slam.launch.py rviz:=false`, `navigation.launch.py slam:=true rviz:=false`, `ros2 run rosorin_navigation waypoint_follower --ros-args -p localizer:=slam` | 7/7 waypoints in 112 s (twice); saved map 203 x 162 cells |
 | 2026-10-14 | Realism mode | `ros2 launch rosorin_navigation sim.launch.py realism:=true depth:=true` | RTF 1.00; `/scan` 10 Hz, `/odom_raw` 47 Hz, `/odom` (EKF) 50 Hz, depth 12 Hz (0.65-3.0 m in the empty world), points 11 Hz; 1 m square: wheel odometry 1.8 cm / 3.0 deg off, EKF 0.8 cm / 1.3 deg |
 | 2026-10-14 | Navigation, realism mode | `sim.launch.py realism:=true`, `navigation.launch.py rviz:=false`, `waypoint_follower` with `waypoints.yaml` | 7/7, 16.1 s per waypoint, final error (AMCL) 0.166 m mean, 0.254 m max |
 | 2026-10-14 | SLAM, realism mode | `sim.launch.py realism:=true`, `slam.launch.py rviz:=false`, 1 m square | map 204 x 162 cells, map->odom correction 1.5 cm |

@@ -8,6 +8,10 @@ map map_01 by default, and its params_file default for localization points to a 
 directory. This file starts the standard nav2_bringup bringup_launch.py (same nodes, not composed)
 with config/nav2_params.yaml (fixed copy of the vendor parameters, see its header) and the map
 saved from our SLAM run (maps/house.yaml). Run it after sim.launch.py, without SLAM.
+
+slam:=true starts only the navigation servers (nav2_bringup navigation_launch.py: no map_server,
+no AMCL) to drive while slam.launch.py builds the map and provides map -> odom, for example with
+waypoint_follower -p localizer:=slam to map the house without driving by hand.
 """
 
 import os
@@ -15,7 +19,7 @@ import os
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
-from launch.conditions import IfCondition
+from launch.conditions import IfCondition, UnlessCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration
 from launch_ros.actions import Node
@@ -36,7 +40,19 @@ def generate_launch_description():
             'autostart': 'true',
             'use_composition': 'False',
             'slam': 'False',
-        }.items())
+        }.items(),
+        condition=UnlessCondition(LaunchConfiguration('slam')))
+
+    navigation_only = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(nav2_bringup, 'launch', 'navigation_launch.py')),
+        launch_arguments={
+            'params_file': LaunchConfiguration('params_file'),
+            'use_sim_time': 'true',
+            'autostart': 'true',
+            'use_composition': 'False',
+        }.items(),
+        condition=IfCondition(LaunchConfiguration('slam')))
 
     rviz_node = Node(
         package='rviz2',
@@ -51,6 +67,9 @@ def generate_launch_description():
         DeclareLaunchArgument('params_file',
                               default_value=os.path.join(pkg, 'config', 'nav2_params.yaml')),
         DeclareLaunchArgument('rviz', default_value='true'),
+        DeclareLaunchArgument('slam', default_value='false',
+                              description='true: navigation only, map and map->odom from SLAM'),
         bringup,
+        navigation_only,
         rviz_node,
     ])
