@@ -59,6 +59,9 @@ sudo apt install -y ros-humble-navigation2 ros-humble-nav2-bringup ros-humble-na
 # SLAM
 sudo apt install -y ros-humble-slam-toolbox ros-humble-cartographer ros-humble-cartographer-ros
 
+# EKF for sim.launch.py realism:=true (wheel odometry + IMU, as the real robot)
+sudo apt install -y ros-humble-robot-localization
+
 # Teleoperation, and TurtleBot3 + Gazebo Classic (baseline used to validate the Nav2 pipeline)
 sudo apt install -y ros-humble-teleop-twist-keyboard ros-humble-gazebo-ros-pkgs ros-humble-turtlebot3-gazebo
 

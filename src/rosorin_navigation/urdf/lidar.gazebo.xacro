@@ -5,8 +5,11 @@
   - 360 degrees, 400 samples (0.9 degrees), as the real COIN-D6 (upstream: 156 degrees, 270 samples;
     the vendor's own Gazebo chapter shows that value, the real sensor does not)
   - rate 10 Hz, range 0.15 - 12 m unchanged (wiki: default 10 Hz, 12 m on black objects)
+  - realism:=true: no noise here; the scan_noise node adds the range-dependent noise of the COIN-D6
+    and publishes /scan (Gazebo's scan is bridged as /scan_raw, as on the real robot)
 -->
 <robot xmlns:xacro="http://www.ros.org/wiki/xacro" name="gpu_lidar">
+  <xacro:arg name="realism" default="false"/>
   <gazebo reference="lidar_frame">
     <sensor name="gpu_lidar" type="gpu_lidar">
       <topic>scan</topic>
@@ -29,7 +32,7 @@
         <noise>
           <type>gaussian</type>
           <mean>0.0</mean>
-          <stddev>0.01</stddev>
+          <stddev>${0.0 if '$(arg realism)' == 'true' else 0.01}</stddev>
         </noise>
       </ray>
       <alwaysOn>1</alwaysOn>

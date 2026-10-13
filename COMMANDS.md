@@ -6,6 +6,9 @@ Test machine: Ubuntu 22.04.5 (WSL2), ROS 2 Humble, Ignition Gazebo 6.18 (Fortres
 
 | Date | Step | Command | Result |
 |---|---|---|---|
+| 2026-10-14 | Realism mode | `ros2 launch rosorin_navigation sim.launch.py realism:=true depth:=true` | RTF 1.00; `/scan` 10 Hz, `/odom_raw` 47 Hz, `/odom` (EKF) 50 Hz, depth 12 Hz (0.65-3.0 m in the empty world), points 11 Hz; 1 m square: wheel odometry 1.8 cm / 3.0 deg off, EKF 0.8 cm / 1.3 deg |
+| 2026-10-14 | Navigation, realism mode | `sim.launch.py realism:=true`, `navigation.launch.py rviz:=false`, `waypoint_follower` with `waypoints.yaml` | 7/7, 16.1 s per waypoint, final error (AMCL) 0.166 m mean, 0.254 m max |
+| 2026-10-14 | SLAM, realism mode | `sim.launch.py realism:=true`, `slam.launch.py rviz:=false`, 1 m square | map 204 x 162 cells, map->odom correction 1.5 cm |
 | 2026-10-14 | Clean rebuild, native Ubuntu 22.04 | `rm -rf build install log && ./build.sh && source install/setup.bash && ./test.sh` | 4 packages build; 24 tests, 0 failures; 13 fidelity tests pass; `sim.launch.py` with GUI and headless, `probe_motion.py` ratios 1.00 / 1.00 / 1.00 |
 | 2026-10-12 | Build | `colcon build --symlink-install` | 4 packages (`robot_gazebo`, `rosorin_description`, `rosorin_gazebo_plugins`, `rosorin_navigation`) build; source `install/setup.bash` again afterwards so Gazebo finds the drive plugin |
 | 2026-10-12 | Package tests | `colcon test --packages-select rosorin_gazebo_plugins rosorin_navigation && colcon test-result` | 24 tests, 0 failures (fidelity, flake8, pep257, uncrustify, lint_cmake, xmllint) |

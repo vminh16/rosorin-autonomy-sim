@@ -18,6 +18,12 @@ from the Hiwonder ROSOrin Pro simulation package (wiki 9_Gazebo_Simulation,
   - furniture (positions from spawn_objects.launch.py) is spawned as static models: upstream
     spawns 17 dynamic multi-link bodies, which drops the Real Time Factor from 1.0 to ~0.5
   - robocup_home uses worlds/robocup_home.sdf from this package: physics step 0.03 -> 0.01 s
+  - realism:=true (default false, the setup of the report): sensor noise as the real sensors and
+    odometry that drifts. Gazebo's /odom (true pose) becomes /ground_truth/odom and its TF is not
+    used; wheel_odometry publishes /odom_raw from the wheel encoders, robot_localization fuses it
+    with the IMU into /odom and the TF odom -> base_footprint, as on the robot (wiki 2.1.4); the
+    LiDAR scan comes as /scan_raw and scan_noise publishes /scan with the COIN-D6 noise
+  - depth:=true makes the camera an RGB-D camera (/depth_cam/depth/image_raw, /depth_cam/points)
   - robot model is urdf/rosorin_sim.urdf.xacro from this package (wheel kinematics, LiDAR 360 deg,
     camera FOV/rate, IMU, mass) instead of robot_gazebo/urdf/robot.gazebo.xacro; each change is
     explained in the header of that file and checked by test/test_sim_fidelity.py
@@ -27,6 +33,7 @@ import os
 import re
 
 from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import PackageNotFoundError
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.actions import SetEnvironmentVariable
@@ -103,6 +110,16 @@ def launch_setup(context):
     camera = LaunchConfiguration('camera').perform(context) == 'true'
     world_override = LaunchConfiguration('world_file').perform(context)
     xacro_override = LaunchConfiguration('robot_xacro').perform(context)
+    realism = LaunchConfiguration('realism').perform(context) == 'true'
+    depth = LaunchConfiguration('depth').perform(context) == 'true'
+    if realism:
+        # checked before anything starts: a missing package found later aborts the launch and
+        # leaves Gazebo running
+        try:
+            get_package_share_directory('robot_localization')
+        except PackageNotFoundError:
+            raise RuntimeError('realism:=true needs robot_localization: '
+                               'sudo apt install ros-humble-robot-localization (or ./setup.sh)')
 
     robot_gazebo = get_package_share_directory('robot_gazebo')
     own_world = os.path.join(get_package_share_directory('rosorin_navigation'), 'worlds',
@@ -113,7 +130,9 @@ def launch_setup(context):
         get_package_share_directory('rosorin_navigation'), 'urdf', 'rosorin_sim.urdf.xacro')
     ign_args = f' -r {world_file} --render-engine-gui {gui_engine}' + ('' if gui else ' -s')
     robot_description = ParameterValue(
-        Command(['xacro ', xacro_file, ' sim_ign:=true']), value_type=str)
+        Command(['xacro ', xacro_file, ' sim_ign:=true',
+                 f' realism:={str(realism).lower()} depth:={str(depth).lower()}']),
+        value_type=str)
 
     ign = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(os.path.join(
@@ -141,24 +160,50 @@ def launch_setup(context):
         arguments=[
             '/controller/cmd_vel@geometry_msgs/msg/Twist]ignition.msgs.Twist',
             '/odom@nav_msgs/msg/Odometry[ignition.msgs.Odometry',
-            '/odom/tf@tf2_msgs/msg/TFMessage[ignition.msgs.Pose_V',
             '/clock@rosgraph_msgs/msg/Clock[ignition.msgs.Clock',
             '/joint_states@sensor_msgs/msg/JointState[ignition.msgs.Model',
             '/scan@sensor_msgs/msg/LaserScan[ignition.msgs.LaserScan',
             '/scan/points@sensor_msgs/msg/PointCloud2[ignition.msgs.PointCloudPacked',
             '/imu@sensor_msgs/msg/Imu[ignition.msgs.IMU',
+        ] + ([] if realism else [
+            '/odom/tf@tf2_msgs/msg/TFMessage[ignition.msgs.Pose_V',
+        ]) + ([
+            '/depth_cam/image@sensor_msgs/msg/Image[ignition.msgs.Image',
+            '/depth_cam/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo',
+        ] if camera else []) + ([
+            '/depth_cam/depth_image@sensor_msgs/msg/Image[ignition.msgs.Image',
+            '/depth_cam/points@sensor_msgs/msg/PointCloud2[ignition.msgs.PointCloudPacked',
+        ] if camera and depth else []),
+        remappings=[
+            ('/controller/cmd_vel', '/cmd_vel'),
+            ('/depth_cam/image', '/depth_cam/rgb/image_raw'),
+            ('/depth_cam/camera_info', '/depth_cam/rgb/camera_info'),
+            ('/depth_cam/depth_image', '/depth_cam/depth/image_raw'),
         ] + ([
-            '/depth_cam/depth_cam@sensor_msgs/msg/Image[ignition.msgs.Image',
-            '/depth_cam/rgb/camera_info@sensor_msgs/msg/CameraInfo[ignition.msgs.CameraInfo',
-        ] if camera else []),
-        remappings=[('/odom/tf', '/tf'), ('/controller/cmd_vel', '/cmd_vel')],
+            ('/odom', '/ground_truth/odom'),
+            ('/scan', '/scan_raw'),
+        ] if realism else [
+            ('/odom/tf', '/tf'),
+        ]),
         parameters=[{'use_sim_time': True}])
+
+    realism_nodes = [
+        Node(package='rosorin_navigation', executable='scan_noise', output='screen',
+             parameters=[{'use_sim_time': True}]),
+        Node(package='rosorin_navigation', executable='wheel_odometry', output='screen',
+             parameters=[{'use_sim_time': True}]),
+        Node(package='robot_localization', executable='ekf_node', name='ekf_filter_node',
+             output='screen',
+             parameters=[os.path.join(get_package_share_directory('rosorin_navigation'),
+                                      'config', 'ekf.yaml'), {'use_sim_time': True}],
+             remappings=[('odometry/filtered', 'odom')]),
+    ] if realism else []
 
     actions = [SetEnvironmentVariable('MESA_GL_VERSION_OVERRIDE', '4.5')] if wsl else []
     actions += [
         SetEnvironmentVariable('DEPTH_CAMERA_TYPE', os.environ.get('DEPTH_CAMERA_TYPE', 'aurora')),
         ign, robot_state_publisher, spawn_robot, bridge,
-    ]
+    ] + realism_nodes
     if world == 'robocup_home' and furniture:
         actions += spawn_furniture(robot_gazebo)
     if static_map_tf:
@@ -185,6 +230,10 @@ def generate_launch_description():
                               description='bridge the RGB camera to ROS'),
         DeclareLaunchArgument('world_file', default_value='',
                               description='absolute .sdf path, overrides world'),
+        DeclareLaunchArgument('realism', default_value='false',
+                              description='true: sensor noise, drifting odometry fused by an EKF'),
+        DeclareLaunchArgument('depth', default_value='false',
+                              description='true: RGB-D camera (depth image and point cloud)'),
         DeclareLaunchArgument('robot_xacro', default_value='',
                               description='absolute .xacro path, overrides the Hiwonder URDF'),
         DeclareLaunchArgument('x', default_value='0.0'),

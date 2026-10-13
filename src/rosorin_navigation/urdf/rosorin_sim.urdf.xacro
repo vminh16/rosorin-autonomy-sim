@@ -8,7 +8,8 @@
   - MecanumDrive uses the wiki constants: wheel_radius 0.04, wheel_separation 0.17706,
     wheelbase 0.17165 (upstream 0.05 / 0.34 / 0.30 disagreed with the simulated wheels:
     forward speed came out at 0.8x the command and turning at 1.5x)
-  - IMU sensor included (upstream loaded the plugin but never declared the sensor, ISSUE-011)
+  - IMU sensor included (upstream loaded the plugin but never declared the sensor, ISSUE-011);
+    imu.gazebo.xacro adds noise with realism:=true
   - sensors and wheels: see lidar.gazebo.xacro, camera.gazebo.xacro, wheel.xacro
   - PlanarDrive (rosorin_gazebo_plugins) moves the body: holonomic twist tracking, sideways
     included, with the force capped by wheel traction. It replaced VelocityControl, which pushed
@@ -22,12 +23,14 @@
 -->
 <robot name="robot" xmlns:xacro="http://ros.org/wiki/xacro">
   <xacro:arg name="sim_ign" default="true"/>
+  <xacro:arg name="realism" default="false"/>  <!-- sensor noise (imu, lidar xacros) -->
+  <xacro:arg name="depth" default="false"/>    <!-- RGB-D camera (camera.gazebo.xacro) -->
 
   <xacro:include filename="$(find rosorin_navigation)/urdf/rosorin_body.xacro"/>
   <xacro:include filename="$(find rosorin_navigation)/urdf/wheel.xacro"/>
   <xacro:include filename="$(find rosorin_navigation)/urdf/lidar.gazebo.xacro"/>
   <xacro:include filename="$(find rosorin_navigation)/urdf/camera.gazebo.xacro"/>
-  <xacro:include filename="$(find robot_gazebo)/urdf/imu.gazebo.xacro"/>
+  <xacro:include filename="$(find rosorin_navigation)/urdf/imu.gazebo.xacro"/>
   <xacro:include filename="$(find rosorin_navigation)/urdf/pro_upper.xacro"/>
   <xacro:include filename="$(find rosorin_navigation)/urdf/appearance.xacro"/>
 

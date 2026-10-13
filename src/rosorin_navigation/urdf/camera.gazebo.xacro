@@ -1,32 +1,72 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <!--
-  Camera of the ROSOrin Pro simulation: colour stream of the Aurora930, wiki 1.10.4.
+  Camera of the ROSOrin Pro simulation: the Aurora930, wiki 1.10.4.
   Fixed copy of robot_gazebo/urdf/camera.gazebo.xacro. Changes:
   - horizontal FOV 74 degrees (1.2915 rad), 640x400 gives 51 degrees vertical: the robot manual
     value (the Aurora930 wiki says 71 x 46); upstream used 60 degrees
   - 12 Hz as the real camera (upstream 30 Hz, which also costs rendering time)
-  Not simulated: the depth and IR streams (the sensor here is an RGB camera only).
+  - mounted on the arm wrist (camera_link0 in pro_upper.xacro), as on the real robot
+  - topics /depth_cam/rgb/image_raw and /depth_cam/rgb/camera_info (bridged in sim.launch.py)
+  - depth:=true makes it an RGB-D camera (rgbd_camera) as the real one: depth 0.15 - 3 m (robot manual;
+    the camera wiki says 0.3 - 3 m), noise 7 mm (precision 7 mm at 1 m, wiki), and a point cloud.
+    Ignition topics depth_cam/{image,depth_image,points,camera_info}. Off by default: it costs
+    rendering time. The IR stream is not simulated.
 -->
 <robot name="camera_gazebo" xmlns:xacro="http://ros.org/wiki/xacro">
+  <xacro:arg name="depth" default="false"/>
+
   <gazebo reference="camera_link0">
-    <sensor name="robot_cam" type="camera">
-      <camera>
-        <horizontal_fov>1.2915</horizontal_fov>
-        <image>
-          <width>640</width>
-          <height>400</height>
-        </image>
-        <clip>
-          <near>0.1</near>
-          <far>10</far>
-        </clip>
-      </camera>
-      <always_on>1</always_on>
-      <update_rate>12</update_rate>
-      <visualize>true</visualize>
-      <camera_info_topic>/depth_cam/rgb/camera_info</camera_info_topic>
-      <topic>/depth_cam/depth_cam</topic>
-      <enable_metrics>true</enable_metrics>
-    </sensor>
+    <xacro:if value="$(arg depth)">
+      <sensor name="robot_cam" type="rgbd_camera">
+        <camera>
+          <horizontal_fov>1.2915</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>400</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>10</far>
+          </clip>
+          <depth_camera>
+            <clip>
+              <near>0.15</near>
+              <far>3.0</far>
+            </clip>
+          </depth_camera>
+          <noise>
+            <type>gaussian</type>
+            <mean>0</mean>
+            <stddev>0.007</stddev>
+          </noise>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>12</update_rate>
+        <visualize>true</visualize>
+        <topic>depth_cam</topic>
+        <ignition_frame_id>camera_link0</ignition_frame_id>
+      </sensor>
+    </xacro:if>
+    <xacro:unless value="$(arg depth)">
+      <sensor name="robot_cam" type="camera">
+        <camera>
+          <horizontal_fov>1.2915</horizontal_fov>
+          <image>
+            <width>640</width>
+            <height>400</height>
+          </image>
+          <clip>
+            <near>0.1</near>
+            <far>10</far>
+          </clip>
+        </camera>
+        <always_on>1</always_on>
+        <update_rate>12</update_rate>
+        <visualize>true</visualize>
+        <camera_info_topic>depth_cam/camera_info</camera_info_topic>
+        <topic>depth_cam/image</topic>
+        <ignition_frame_id>camera_link0</ignition_frame_id>
+      </sensor>
+    </xacro:unless>
   </gazebo>
 </robot>

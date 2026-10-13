@@ -67,7 +67,10 @@ ros2 launch rosorin_navigation sim.launch.py world:=empty    # empty world
 ```
 
 Useful arguments: `furniture:=false`, `camera:=false` (do not bridge the RGB camera), `gui:=false` (server only),
-`x:= y:= yaw:=` (spawn pose), `gui_render_engine:=ogre2|ogre` (default `auto`: ogre2, or ogre on WSL2). Check the simulator is healthy (real-time factor about 1.0 with nothing else running):
+`x:= y:= yaw:=` (spawn pose), `gui_render_engine:=ogre2|ogre` (default `auto`: ogre2, or ogre on WSL2),
+`depth:=true` (RGB-D camera: `/depth_cam/depth/image_raw`, `/depth_cam/points`), `realism:=true` (sensor noise as the real
+sensors, odometry that drifts: `/odom_raw` from the wheel encoders fused with the IMU by robot_localization into `/odom`; the
+true pose is then `/ground_truth/odom`). The default (`realism:=false`) is the setup of the results below. Check the simulator is healthy (real-time factor about 1.0 with nothing else running):
 
 ```bash
 ign topic -e -t /stats -n 30 | grep real_time_factor
@@ -132,12 +135,13 @@ The simulated robot is checked against the Hiwonder wiki (hardware chapter 1.10,
 
 | | Real ROSOrin Pro (wiki) | Simulation |
 |---|---|---|
-| LiDAR | COIN-D6, 360 deg, 0.9 deg, 10 Hz, 12 m | 360 deg, 400 beams, 10 Hz, 12 m |
-| Camera | Aurora930, 640x400, 74x51 deg, 12 fps | RGB only, 640x400, 74 deg, 12 Hz (no depth/IR) |
-| IMU | `/imu`, frame `imu_link` | `/imu` 49.5 Hz, frame `imu_link` |
+| Body | mecanum chassis, deck, 6DOF arm, 7-inch screen | Hiwonder CAD chassis; deck, arm (fixed pose of the wiki photo) and screen drawn from the photo, visual only |
+| LiDAR | COIN-D6, 360 deg, 0.9 deg, 10 Hz, 12 m; accuracy 4 mm below 2 m, 15 mm to 12 m | 360 deg, 400 beams, 10 Hz, 12 m; noise 10 mm, or 2 / 7.5 mm by range with `realism:=true` |
+| Camera | Aurora930 on the arm wrist, 640x400, 74x51 deg, 12 fps, depth 0.15-3 m | on the wrist, 640x400, 74 deg, 12 Hz; RGB, plus depth and point cloud with `depth:=true` (no IR) |
+| IMU | `/imu`, frame `imu_link` | `/imu` 49.5 Hz, frame `imu_link`; noise and gyro bias with `realism:=true` |
 | Wheels | mecanum, diameter 0.08 m, lever arm 0.1744 m | same constants in the drive plugin |
 | Motion | wheel controller tracks `/controller/cmd_vel`; motors 110 rpm no-load | traction-limited drive plugin: 1.00 forward / sideways / turning; top speed 0.461 m/s, 2.64 rad/s (motor limit); stays flat when pushed into obstacles |
-| Odometry | encoders + EKF, drifts | true pose from Gazebo, no drift |
+| Odometry | encoders (`/odom_raw`) + IMU in a robot_localization EKF (`/odom`), drifts | true pose from Gazebo (default); with `realism:=true` encoder odometry with calibration errors and slip, fused with the IMU by the same EKF |
 | Mass | not in the wiki (retail: about 3.1 kg) | about 3.1 kg |
 
 ```bash
@@ -148,7 +152,7 @@ python3 tools/probe_physics.py                                            # empt
 ```
 
 This is a coursework simulator, not a digital twin. Known and accepted simplifications: idealised actuation (0.1 s response and a
-traction limit, but no latency or wheel slip), true odometry, simple LiDAR noise, an RGB-only camera mounted on the chassis, a clean static world, and no
+traction limit, but no latency or wheel slip), true odometry and simple sensor noise unless `realism:=true`, no IR stream, an arm that does not move, a clean static world, and no
 individual mecanum rollers (directional-friction wheels were unstable in Fortress). LiDAR-based inputs transfer best to the real
 robot; image-based inputs have the largest gap. Reasons, evidence and consequences are discussed in the report.
 

@@ -34,6 +34,8 @@ setup(
     entry_points={
         'console_scripts': [
             'waypoint_follower = rosorin_navigation.waypoint_follower:main',
+            'scan_noise = rosorin_navigation.scan_noise:main',
+            'wheel_odometry = rosorin_navigation.wheel_odometry:main',
         ],
     },
 )
