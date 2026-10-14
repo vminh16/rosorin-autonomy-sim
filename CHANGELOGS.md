@@ -16,6 +16,9 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 | Realism mode, RGB-D camera | odometry was the true pose, sensor noise one fixed value, no depth stream | `realism:=true`: encoder odometry + IMU in a robot_localization EKF as on the robot, COIN-D6 range noise, IMU noise; `depth:=true`; Nav2 7/7 and SLAM work, default mode unchanged | `756c67e` |
 | Autonomous mapping | mapping needed driving by hand | `navigation.launch.py slam:=true` + `waypoint_follower localizer:=slam`: 7/7 rooms in 112 s, map 203 x 162 | `002d605` |
 | Install steps, README, report | `robot_localization` (realism mode) was not installed by `setup.sh`; install steps spread over README and ENVIRONMENT.md | `setup.sh` installs every package in 4 numbered steps; one 5-step install in README; shorter README with the demo video (3 min 39 s, release v1.0.0); report updated with realism mode, autonomous mapping and the EKF problem | `6488b95`, `6210a46` |
+| CI, licences | the lint jobs also linted the vendor code (flake8 failed), cpplint wanted a copyright line, the docs workflow had no write access (403) and no docs config; package licences were "TODO" | lint on this project's packages only, all 7 linters pass locally; docs workflow removed; Apache-2.0 | `9ed7918` |
+| Navigation evidence | the single-goal figures had no committed log, and the long-route CSV held the AMCL estimate, not the true pose; RViz had no "2D Goal Pose" tool although the README named it | `waypoint_follower` `single_goals:=true` and `true_pose_topic`; logged on the current model: 6/6 goals (0.11 m), 7/7 and 14/14 waypoints (0.12 m); `/goal_pose` goal succeeds | `d5ec2a4`, `706eea7` |
+| Demo tools | the video's world, layouts and driving script were not in the repository | `tools/demo/` with the recording and post-production scripts | `48bace8` |
 
 ## 2026-10-12 — Re-check against the real documentation, navigation
 
