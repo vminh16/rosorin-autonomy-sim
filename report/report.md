@@ -3,8 +3,7 @@
 **Robot:** Hiwonder ROSOrin Pro, a small four-wheel mecanum robot with a 360° 2D LiDAR.
 **Software:** Ignition Gazebo 6 (Fortress), ROS 2 Humble, Ubuntu 22.04. **GPU:** NVIDIA RTX 2050.
 **Repository:** `vminh16/rosorin-autonomy-sim`; short hashes such as `4d85581` point to the commit with the change and its
-evidence. **Demo video:** [English](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_en.mp4),
-[Vietnamese](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_vi.mp4) subtitles.
+evidence. **Demo video:** [3 min 39 s](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_en.mp4).
 
 ## 1. Summary
 

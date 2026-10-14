@@ -11,9 +11,8 @@ drifting wheel odometry and datasheet sensor noise, as on the real robot.
 
 [![Demo video](docs/images/demo_video.jpg)](https://github.com/vminh16/rosorin-autonomy-sim/releases/tag/v1.0.0)
 
-Demo video (2 min 32 s, real commands from launch to the end of a mission):
-[English subtitles](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_en.mp4) ·
-[Vietnamese subtitles](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_vi.mp4).
+**[Demo video](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_en.mp4)**
+(3 min 39 s): the real commands, step by step, from starting the simulation to a 7-waypoint mission.
 The written report (setup, results, problems, trade-offs) is [`report/report.md`](report/report.md).
 
 ## Highlights
@@ -29,8 +28,28 @@ The written report (setup, results, problems, trade-offs) is [`report/report.md`
 
 ## Installation
 
-Requirements: Ubuntu 22.04 and ROS 2 Humble (install guide and platform notes, including WSL2 and hybrid-GPU laptops:
-[`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md)). Do not use a conda environment.
+Requirements: **Ubuntu 22.04** (ROS 2 Humble has no packages for 24.04); an NVIDIA GPU is recommended. Do not use a conda
+environment (`conda deactivate`; `which python3` must print `/usr/bin/python3`). Platform notes for WSL2 and hybrid-GPU
+laptops: [`docs/ENVIRONMENT.md`](docs/ENVIRONMENT.md).
+
+**0. ROS 2 Humble** (once per machine; skip if `ls /opt/ros/humble` already works), from the
+[official guide](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html):
+
+```bash
+sudo apt update && sudo apt install -y locales software-properties-common curl git
+sudo locale-gen en_US en_US.UTF-8 && sudo update-locale LC_ALL=en_US.UTF-8 LANG=en_US.UTF-8 && export LANG=en_US.UTF-8
+sudo add-apt-repository -y universe
+export ROS_APT_SOURCE_VERSION=$(curl -s https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | grep -F "tag_name" | awk -F\" '{print $4}')
+curl -L -o /tmp/ros2-apt-source.deb "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ROS_APT_SOURCE_VERSION}/ros2-apt-source_${ROS_APT_SOURCE_VERSION}.$(. /etc/os-release && echo $VERSION_CODENAME)_all.deb"
+sudo dpkg -i /tmp/ros2-apt-source.deb
+sudo apt update && sudo apt install -y ros-humble-desktop ros-dev-tools
+sudo rosdep init && rosdep update
+```
+
+If the system language is not English (for example Vietnamese), also run
+`echo 'export LC_NUMERIC=en_US.UTF-8' >> ~/.bashrc`, so that ROS and Gazebo read `0.08` as a number.
+
+**1-5. The workspace:**
 
 ```bash
 # 1. Get the code
