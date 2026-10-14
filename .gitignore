@@ -13,7 +13,8 @@ docs/PLAN.md
 docs/DELIVERABLES.md
 docs/wiki_findings/
 
-# Videos (upload elsewhere, link in docs/VIDEOS.md)
+# Videos: published as GitHub release assets (linked from README.md), demo recording scripts kept local
+videos/
 *.mp4
 *.avi
 *.mkv
