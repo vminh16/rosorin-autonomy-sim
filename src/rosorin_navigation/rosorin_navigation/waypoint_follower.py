@@ -15,6 +15,11 @@ Copyright 2021 Samsung Research America, Apache-2.0). Changes:
   - no preemption demo; a single timeout for the whole route
   - localizer:=slam drives while slam_toolbox maps (navigation.launch.py slam:=true): no AMCL to
     wait for, poses are in the map frame SLAM publishes
+  - single_goals:=true sends each pose as its own NavigateToPose goal (the single-goal test)
+    instead of one FollowWaypoints route
+  - true_pose_topic: an Odometry topic with the true pose from Gazebo (odom in the default mode,
+    ground_truth/odom with realism:=true), logged next to the estimate from TF. Gazebo's odometry
+    starts at the spawn pose, so this equals the map frame only for the default spawn (0, 0, 0)
 
 Run with Nav2 up (navigation.launch.py):
   ros2 run rosorin_navigation waypoint_follower --ros-args \
@@ -39,7 +44,8 @@ import yaml
 
 CSV_FIELDS = ['run', 'index', 'name', 'goal_x', 'goal_y', 'goal_yaw', 'start_s', 'end_s',
               'duration_s', 'status', 'distance_m', 'final_x', 'final_y', 'final_yaw',
-              'error_xy_m', 'error_yaw_deg']
+              'error_xy_m', 'error_yaw_deg', 'true_x', 'true_y', 'true_yaw', 'true_error_xy_m',
+              'true_error_yaw_deg']
 
 
 def load_waypoints(path):
@@ -90,6 +96,39 @@ class Odometer:
         self._last = p
 
 
+class TruePose:
+    """Latest pose of an Odometry topic (the true pose from Gazebo)."""
+
+    def __init__(self, node, topic):
+        self.pose = (float('nan'),) * 3
+        if topic:
+            node.create_subscription(Odometry, topic, self._callback, 20)
+
+    def _callback(self, msg):
+        p = msg.pose.pose
+        self.pose = (p.position.x, p.position.y, yaw_of(p.orientation))
+
+
+def run_single_goals(navigator, poses, timeout_s, close_segment):
+    """Send each pose as its own NavigateToPose goal; return the set of failed indexes."""
+    failed = set()
+    for i, pose in enumerate(poses):
+        pose.header.stamp = navigator.get_clock().now().to_msg()
+        if not navigator.goToPose(pose):
+            failed.add(i)
+            close_segment(i)
+            continue
+        start = navigator.get_clock().now()
+        while not navigator.isTaskComplete():
+            if navigator.get_clock().now() - start > Duration(seconds=timeout_s):
+                navigator.warn('Goal %d timeout (%.0f s), cancelling' % (i + 1, timeout_s))
+                navigator.cancelTask()
+        close_segment(i)
+        if navigator.getResult() != TaskResult.SUCCEEDED:
+            failed.add(i)
+    return failed
+
+
 def main():
     rclpy.init()
     navigator = BasicNavigator(node_name='rosorin_waypoint_follower')
@@ -102,12 +141,15 @@ def main():
     timeout_s = navigator.declare_parameter('timeout', 900.0).value
     set_initial = navigator.declare_parameter('set_initial_pose', False).value
     localizer = navigator.declare_parameter('localizer', 'amcl').value
+    single_goals = navigator.declare_parameter('single_goals', False).value
+    true_pose_topic = navigator.declare_parameter('true_pose_topic', '').value
     initial = [navigator.declare_parameter(n, 0.0).value
                for n in ('initial_x', 'initial_y', 'initial_yaw')]
 
     frame_id, waypoints = load_waypoints(waypoints_file)
     navigator.info('Loaded %d waypoints from %s' % (len(waypoints), waypoints_file))
     odometer = Odometer(navigator)
+    truth = TruePose(navigator, true_pose_topic)
     tf_buffer = tf2_ros.Buffer()
     tf2_ros.TransformListener(tf_buffer, navigator)
 
@@ -136,13 +178,21 @@ def main():
 
     run_id = datetime.now().strftime('%Y%m%d-%H%M%S')
     poses = [make_pose(navigator, frame_id, w['x'], w['y'], w['yaw']) for w in waypoints]
-    segments = {}  # index -> (start_s, start_dist, end_s, end_dist, final pose)
+    segments = {}  # index -> (start_s, start_dist, end_s, end_dist, final pose, true pose)
     current, seg_start, seg_dist = 0, now_s(), odometer.total
 
     def close_segment(index):
         nonlocal seg_start, seg_dist
-        segments[index] = (seg_start, seg_dist, now_s(), odometer.total, robot_pose())
+        segments[index] = (seg_start, seg_dist, now_s(), odometer.total, robot_pose(),
+                           truth.pose)
         seg_start, seg_dist = now_s(), odometer.total
+
+    if single_goals:
+        missed = run_single_goals(navigator, poses, timeout_s, close_segment)
+        current = len(waypoints)
+        result = TaskResult.FAILED if missed else TaskResult.SUCCEEDED
+        return write_log(navigator, waypoints, segments, missed, current, result, output_dir,
+                         run_id, now_s)
 
     nav_start = navigator.get_clock().now()
     if not navigator.followWaypoints(poses):
@@ -162,11 +212,17 @@ def main():
     if current < len(waypoints):
         close_segment(current)
     missed = set(navigator.result_future.result().result.missed_waypoints)
+    return write_log(navigator, waypoints, segments, missed, current, result, output_dir, run_id,
+                     now_s)
 
+
+def write_log(navigator, waypoints, segments, missed, current, result, output_dir, run_id, now_s):
+    """Write the CSV log, print one line per waypoint, return the exit code."""
+    nan3 = (float('nan'),) * 3
     rows = []
     for i, w in enumerate(waypoints):
-        start_s, start_dist, end_s, end_dist, (x, y, yaw) = segments.get(
-            i, (now_s(), 0.0, now_s(), 0.0, (float('nan'),) * 3))
+        start_s, start_dist, end_s, end_dist, (x, y, yaw), (tx, ty, tyaw) = segments.get(
+            i, (now_s(), 0.0, now_s(), 0.0, nan3, nan3))
         reached = i not in missed and (
             i < current or (i == current and result == TaskResult.SUCCEEDED))
         rows.append({
@@ -177,7 +233,10 @@ def main():
             'distance_m': '%.3f' % (end_dist - start_dist), 'final_x': '%.3f' % x,
             'final_y': '%.3f' % y, 'final_yaw': '%.3f' % yaw,
             'error_xy_m': '%.3f' % math.hypot(x - w['x'], y - w['y']),
-            'error_yaw_deg': '%.1f' % math.degrees(angle_diff(yaw, w['yaw']))})
+            'error_yaw_deg': '%.1f' % math.degrees(angle_diff(yaw, w['yaw'])),
+            'true_x': '%.3f' % tx, 'true_y': '%.3f' % ty, 'true_yaw': '%.3f' % tyaw,
+            'true_error_xy_m': '%.3f' % math.hypot(tx - w['x'], ty - w['y']),
+            'true_error_yaw_deg': '%.1f' % math.degrees(angle_diff(tyaw, w['yaw']))})
         navigator.info('Waypoint %d/%d %s: %s, %s s, %s m, error %s m' % (
             i + 1, len(waypoints), w['name'], rows[-1]['status'], rows[-1]['duration_s'],
             rows[-1]['distance_m'], rows[-1]['error_xy_m']))

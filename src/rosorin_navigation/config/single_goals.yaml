@@ -1,0 +1,12 @@
+# Single-goal test: one goal per room, each sent as its own NavigateToPose goal
+# (waypoint_follower -p single_goals:=true), in the frame of maps/house.yaml. Same poses as the
+# first six points of waypoints.yaml; bedroom (3.0, -1.5) is the U-shaped path on which the vendor's
+# DWB controller stalls (docs/DEBUG_LOG.md ISSUE-018).
+frame_id: map
+waypoints:
+  - {name: kitchen, x: -3.0, y: 2.5, yaw: 1.57}
+  - {name: dining_west, x: 0.5, y: 3.0, yaw: 0.0}
+  - {name: dining_east, x: 4.0, y: 2.0, yaw: -1.57}
+  - {name: bedroom, x: 3.0, y: -1.5, yaw: 3.14}
+  - {name: sofa, x: -0.5, y: -2.5, yaw: 3.14}
+  - {name: tea_table, x: -3.5, y: -1.0, yaw: 1.57}
