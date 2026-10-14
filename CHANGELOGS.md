@@ -19,6 +19,7 @@ Issue numbers refer to [`docs/DEBUG_LOG.md`](docs/DEBUG_LOG.md).
 | CI, licences | the lint jobs also linted the vendor code (flake8 failed), cpplint wanted a copyright line, the docs workflow had no write access (403) and no docs config; package licences were "TODO" | lint on this project's packages only, all 7 linters pass locally; docs workflow removed; Apache-2.0 | `9ed7918` |
 | Navigation evidence | the single-goal figures had no committed log, and the long-route CSV held the AMCL estimate, not the true pose; RViz had no "2D Goal Pose" tool although the README named it | `waypoint_follower` `single_goals:=true` and `true_pose_topic`; logged on the current model: 6/6 goals (0.11 m), 7/7 and 14/14 waypoints (0.12 m); `/goal_pose` goal succeeds | `d5ec2a4`, `706eea7` |
 | Demo tools | the video's world, layouts and driving script were not in the repository | `tools/demo/` with the recording and post-production scripts | `48bace8` |
+| Install from scratch in Docker | `setup.sh` piped `ros2.repos` through `envsubst`, which a minimal Ubuntu does not have | README install run verbatim in a fresh `ubuntu:22.04` container: ROS 2 Humble, clone, setup, build, 27 tests 0 failures, headless simulation publishes `/odom` and `/imu` | `43595cb` |
 
 ## 2026-10-12 — Re-check against the real documentation, navigation
 

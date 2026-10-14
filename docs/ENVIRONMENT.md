@@ -1,7 +1,7 @@
 # Environment setup
 
 Tested on **Ubuntu 22.04.5 LTS** with **ROS 2 Humble** and Ignition Gazebo 6 (Fortress): natively with an NVIDIA RTX 2050
-(hybrid Intel + NVIDIA laptop) and inside WSL2. Ubuntu 22.04 is required: ROS 2 Humble has no binaries for 24.04.
+(hybrid Intel + NVIDIA laptop) and inside WSL2. The README install was also run from scratch in a fresh `ubuntu:22.04` Docker container (see `COMMANDS.md`). Ubuntu 22.04 is required: ROS 2 Humble has no binaries for 24.04.
 Problems met during setup are logged in [`DEBUG_LOG.md`](DEBUG_LOG.md).
 
 Follow the steps in order. Steps 1 and 2 are done once per machine; step 3 is the whole workspace install.
