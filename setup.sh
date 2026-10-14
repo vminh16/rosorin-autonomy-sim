@@ -28,7 +28,7 @@ sudo apt-get install -y \
         python3-numpy python3-yaml python3-pytest
 
 step 3/4 "Installing the remaining dependencies declared in the package.xml files (rosdep)"
-envsubst < src/ros2.repos | vcs import src      # empty: the vendor simulation is already in src/
+vcs import src < src/ros2.repos                 # empty: the vendor simulation is already in src/
 rosdep update --rosdistro=$ROS_DISTRO
 rosdep install --from-paths src --ignore-src -y --rosdistro=$ROS_DISTRO
 
