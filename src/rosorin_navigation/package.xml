@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Launch, config and navigation scripts for the ROSOrin Pro simulation</description>
   <maintainer email="minhsctn1608@gmail.com">minh</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <depend>rclpy</depend>
   <depend>geometry_msgs</depend>

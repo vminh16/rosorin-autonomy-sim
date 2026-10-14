@@ -1,3 +1,5 @@
+// Copyright 2026 Nguyen Van Minh. Licensed under the Apache License, Version 2.0 (see LICENSE).
+//
 // Traction-limited planar drive for the ROSOrin Pro simulation (Ignition Gazebo Fortress).
 //
 // Replaces ignition::gazebo::systems::VelocityControl, which overwrites the full body velocity

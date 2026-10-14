@@ -25,7 +25,7 @@ setup(
     maintainer='minh',
     maintainer_email='minhsctn1608@gmail.com',
     description='Launch, config and navigation scripts for the ROSOrin Pro simulation',
-    license='TODO: License declaration',
+    license='Apache-2.0',
     extras_require={
         'test': [
             'pytest',

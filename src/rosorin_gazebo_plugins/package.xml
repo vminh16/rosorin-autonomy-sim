@@ -5,7 +5,7 @@
   <version>0.0.0</version>
   <description>Ignition Gazebo (Fortress) system plugins for the ROSOrin Pro simulation: traction-limited planar drive</description>
   <maintainer email="minhsctn1608@gmail.com">minh</maintainer>
-  <license>TODO: License declaration</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 
