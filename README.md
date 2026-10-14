@@ -9,7 +9,10 @@ Simulation of the **Hiwonder ROSOrin Pro** mecanum robot in Ignition Gazebo, wit
 (Nav2). The robot model is checked against the vendor's hardware documentation, and an optional realism mode gives it
 drifting wheel odometry and datasheet sensor noise, as on the real robot.
 
-[![Demo video](docs/images/demo_video.jpg)](https://github.com/vminh16/rosorin-autonomy-sim/releases/tag/v1.0.0)
+
+
+
+[![Demo video](docs/images/demo_video.jpg)](https://github.com/user-attachments/assets/ca965abd-1630-4309-ad32-0469e5534bbb)
 
 **[Demo video](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_en.mp4)**
 (3 min 39 s): the real commands, step by step, from starting the simulation to a 7-waypoint mission
