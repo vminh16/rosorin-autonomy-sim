@@ -24,6 +24,23 @@ Entry template:
 - In report: yes | no
 -->
 
+## ISSUE-019 — Realism mode: the EKF loses about 1 degree of heading on every 90 degree turn
+- Date: 2026-10-14
+- Component: rosorin_navigation
+- Status: FIXED
+- Command that fails: `ros2 launch rosorin_navigation sim.launch.py realism:=true`, then four 90 degree turns on the spot
+  (`/cmd_vel` 0.5 rad/s), comparing `/ground_truth/odom`, `/odom_raw`, `/odom` (EKF) and the integrated `/imu` gyro per turn
+- Error: the EKF heading falls behind by 0.9 to 1.3 degrees per turn, while the gyro and the wheel odometry are each within
+  0.2 degrees of the true heading
+- Cause (verified): in the simulation the wheels stop at once when the command ends, but the body keeps turning for the
+  0.1 s time constant of the drive. `wheel_odometry` then publishes the real driver's "stopped" covariance (yaw 1e-9,
+  wiki 2.1.4), and the EKF trusts that zero yaw rate over the gyro for the last part of the turn. On the robot, wheels and
+  body stop together
+- Fix (`756c67e`): the stopped covariance is used only after the wheels have been still for `stop_delay` (0.3 s). The EKF
+  then stays within 0.15 degrees of the gyro per turn
+- Time spent: 1 h
+- In report: yes (problem 10)
+
 ## ISSUE-018 — DWB stalls on a U-shaped path: "Failed to make progress" next to the dining tables
 - Date: 2026-10-12
 - Component: Nav2

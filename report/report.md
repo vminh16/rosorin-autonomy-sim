@@ -14,7 +14,7 @@ evidence. **Demo video:** [3 min 39 s](https://github.com/vminh16/rosorin-autono
   checked every fix with a measurement.
 - **Map:** 99.7% of the walls end up in the saved map, with no offset. Nav2 can also explore the house by itself while the map
   is being built.
-- **Navigation:** 6/6 single goals and 28/28 waypoints. The robot stops 0.11 to 0.12 m from the target on average (true
+- **Navigation:** 6/6 single goals, 7/7 and 14/14 waypoints. The robot stops 0.11 to 0.12 m from the target on average (true
   position from Gazebo). The vendor's DWB controller got stuck on a U-shaped path (5/6); MPPI solves it (6/6).
 - **Realism mode** (`realism:=true`): the odometry comes from wheel encoders and drifts, an EKF fuses it with the gyro as on the
   real robot, and the sensors get datasheet noise. Navigation still reaches 7/7 waypoints.
@@ -86,22 +86,26 @@ The real-time factor (RTF) is simulated time divided by real time: 1.0 means the
 ### 3.3 Navigation
 
 Nav2 runs on the saved map with AMCL, NavFn and MPPI, at most 0.4 m/s and 1.0 rad/s, forward and turning only. "Final error"
-is the distance between the target and where the robot stopped.
+is the distance between the target and where the robot stopped, measured against its true position in Gazebo. The first
+three columns come from one session on the current robot model; each CSV in `results/nav_runs/` has one row per goal.
 
 | | Single goals | Short route | Long route | Short route, realism mode |
 |---|---|---|---|---|
-| Route | 6 goals, one per room | 7 waypoints through every room, twice | 14 waypoints over every room and corner | the same 7 waypoints, once |
-| Reached | **6/6** (vendor DWB: 5/6) | **14/14** | **14/14** | **7/7** |
-| Time | 16.4 s per goal (11.2 to 31.5 s) | 16.0 s per waypoint, 112 s per 31 m lap | 15.4 s per waypoint, 56.6 m in 216 s | 16.1 s per waypoint |
-| Final error | **0.11 m** mean, 0.18 m worst (true pose) | 0.15 m mean, 0.24 m worst (AMCL) | **0.12 m** mean, 0.24 m worst (true pose) | 0.17 m mean, 0.25 m worst (AMCL) |
-| AMCL against true position | 0.06 m mean, 0.11 m worst | — | 0.06 m mean, 0.15 m worst | — |
+| Route | 6 goals, one per room, each sent on its own | 7 waypoints through every room | 14 waypoints over every room and corner | the same 7 waypoints |
+| Reached | **6/6** (vendor DWB: 5/6) | **7/7** | **14/14** | **7/7** |
+| Time | 15.9 s per goal (11.1 to 28.9 s) | 17.0 s per waypoint, 34 m in 119 s | 15.4 s per waypoint, 58.5 m in 215 s | 16.1 s per waypoint |
+| Final error | **0.11 m** mean, 0.17 m worst | **0.12 m** mean, 0.27 m worst | **0.12 m** mean, 0.23 m worst | 0.17 m mean, 0.25 m worst (AMCL estimate) |
+| Heading error | 14° mean, 15° worst | 11° mean, 12° worst | 10° mean, 13° worst | — |
+| AMCL against true position | 0.09 m mean, 0.16 m worst | 0.08 m mean, 0.14 m worst | 0.07 m mean, 0.15 m worst | — |
+| Log | `20261014-120611.csv` | `20261014-120750.csv` | `20261014-120952.csv` | `COMMANDS.md` |
 
 ![14-waypoint route](../docs/images/nav_waypoints_extended.png)
 
 What the numbers mean:
 
-- A goal counts as reached within 0.25 m and 0.25 rad, and the robot stops at once, so the final errors sit just under those
-  limits. Tighter limits would give smaller errors but a slower final approach.
+- A goal counts as reached within 0.25 m and 0.25 rad of where AMCL thinks the robot is, and the robot stops at once. The
+  final errors therefore sit just under those limits, and can pass them by the AMCL error (0.27 m once). Tighter limits
+  would give smaller errors but a slower final approach.
 - A waypoint inside an obstacle is still "reached": the planner moves it to the nearest free cell, up to 0.5 m away. The CSV
   log therefore also stores the real distance to the requested point.
 - By default the odometry does not drift, so these errors are a best case. With drift (realism mode) the route is still
@@ -123,7 +127,7 @@ Only problems that would have broken the system, or made the results silently wr
 | 6 | During mapping the robot climbed furniture, flipped and flew 56 m high, ruining the map | My first drive model forced the commanded velocity with unlimited force | New drive plugin `PlanarDrive`, whose push is limited by wheel friction as on the real robot: collision test 5/9 → 9/9, worst tilt 41° → 0.6° | `79aeecc` |
 | 7 | The robot reached 1.0 m/s and 5 rad/s, faster than its motors allow | No wheel speed limit. The real motors turn at most 110 rpm: 0.461 m/s and 2.64 rad/s | Motor limit added: `probe_physics.py` 7/7 | `6916228` |
 | 8 | The vendor's Nav2 settings cannot be used as published | Footprint of radius 0.07 m for a body that reaches 0.177 m, so paths lead through gaps the robot does not fit; no simulation time; mismatched speed limits; the controller file the launch needs is missing | Fixed copy: real rectangular footprint, simulation time, consistent limits | `2484e5d` |
-| 9 | With DWB, one goal fails 3 times out of 3: the robot wiggles in place until Nav2 gives up | Nothing blocks the robot; DWB itself commands zero speed. The path makes a U-turn around a wall inside the controller's 2 m window, and two of DWB's scores (towards the goal, along the path) cancel out. Confirmed from DWB's published scores | MPPI instead of DWB: 6/6, the hard goal in 31.5 s | `2484e5d` |
+| 9 | With DWB, one goal fails 3 times out of 3: the robot wiggles in place until Nav2 gives up | Nothing blocks the robot; DWB itself commands zero speed. The path makes a U-turn around a wall inside the controller's 2 m window, and two of DWB's scores (towards the goal, along the path) cancel out. Confirmed from DWB's published scores | MPPI instead of DWB: 6/6, the hard goal in 29 s (`results/nav_runs/20261014-120611.csv`) | `2484e5d` |
 | 10 | In realism mode the EKF lost about 1° of heading on every 90° turn, although the gyro and the wheel odometry were both right | In the simulation the wheels stop at once, but the body coasts for 0.1 s. The wheel odometry then reports "stopped" with the real driver's tiny covariance, and the EKF trusts it over the gyro | Report "stopped" only after 0.3 s without wheel motion: the EKF stays within 0.15° of the gyro | `756c67e` |
 
 ## 5. Trade-offs

@@ -149,7 +149,7 @@ __NV_PRIME_RENDER_OFFLOAD=1 __GLX_VENDOR_LIBRARY_NAME=nvidia ros2 launch rosorin
 
 The ROSOrin Pro simulation has no public git repository. It comes from the Hiwonder wiki, section 9.2.1 (Google Drive folder
 "3. Feature Package"): <https://drive.google.com/drive/folders/1sq3698U-EX7a4gbjmGnwYbptlJ3B8aMM>. It is already in this
-repository, unmodified:
+repository, unmodified (only a stray vim swap file, `.ros_ign_bridge.launch.py.swp`, was removed):
 
 | File | Location | sha256 |
 |---|---|---|

@@ -12,7 +12,8 @@ drifting wheel odometry and datasheet sensor noise, as on the real robot.
 [![Demo video](docs/images/demo_video.jpg)](https://github.com/vminh16/rosorin-autonomy-sim/releases/tag/v1.0.0)
 
 **[Demo video](https://github.com/vminh16/rosorin-autonomy-sim/releases/download/v1.0.0/rosorin_demo_en.mp4)**
-(3 min 39 s): the real commands, step by step, from starting the simulation to a 7-waypoint mission.
+(3 min 39 s): the real commands, step by step, from starting the simulation to a 7-waypoint mission
+(recording scripts: [`tools/demo/`](tools/demo/)).
 The written report (setup, results, problems, trade-offs) is [`report/report.md`](report/report.md).
 
 ## Highlights
@@ -21,8 +22,8 @@ The written report (setup, results, problems, trade-offs) is [`report/report.md`
   placement and rates); commanded and achieved velocity match (1.00 forward, sideways and turning); real-time factor 1.0.
 - **SLAM**: slam_toolbox maps the furnished house (99.7% of the walls detected), driven by hand or explored
   autonomously by Nav2 on the growing map (7/7 rooms in 112 s).
-- **Navigation**: AMCL + NavFn + MPPI on the saved map: 6/6 single goals (the vendor's DWB setup: 5/6), 28/28 waypoints,
-  final error 0.11 m mean.
+- **Navigation**: AMCL + NavFn + MPPI on the saved map: 6/6 single goals (the vendor's DWB setup: 5/6), 7/7 and 14/14
+  waypoints, final error 0.11 to 0.12 m mean against the true pose.
 - **Realism mode** (`realism:=true`): encoder odometry with calibration errors and slip, fused with the IMU by a
   robot_localization EKF as on the real robot; LiDAR and IMU noise from the datasheets. Navigation still reaches 7/7 waypoints.
 
@@ -111,13 +112,17 @@ ros2 run rosorin_navigation waypoint_follower --ros-args -p localizer:=slam
 mkdir -p maps && ros2 run nav2_map_server map_saver_cli -f maps/house --ros-args -p use_sim_time:=true -p map_subscribe_transient_local:=true
 ```
 
-**5. Navigation** on the saved map (stop SLAM first, keep the simulation running). AMCL starts at the spawn pose; send a goal
-with "2D Goal Pose" in RViz, or run the 7-waypoint mission of `config/waypoints.yaml` (one CSV log per run in
-`results/nav_runs/`):
+**5. Navigation** on the saved map (stop SLAM first, keep the simulation running). AMCL starts at the spawn pose. Send a
+single goal with "2D Goal Pose" in RViz, or run the goal files (one CSV log per run in `results/nav_runs/`; add
+`-p true_pose_topic:=odom` to also log the true pose from Gazebo):
 
 ```bash
 ros2 launch rosorin_navigation navigation.launch.py                  # maps/house.yaml; other map: map:=<path>.yaml
+# multi-point: 7 waypoints through every room, as one route
 ros2 run rosorin_navigation waypoint_follower --ros-args -p waypoints_file:=src/rosorin_navigation/config/waypoints.yaml
+# single goals: one goal per room, each sent and finished on its own
+ros2 run rosorin_navigation waypoint_follower --ros-args -p single_goals:=true \
+  -p waypoints_file:=src/rosorin_navigation/config/single_goals.yaml
 ```
 
 Before a new run, stop the previous one: `pkill -f "ign gazebo"; pkill -x rviz2; pkill -f parameter_bridge`.
@@ -145,10 +150,12 @@ so every fix lives in a copy in `src/rosorin_navigation/`, and each file states 
 | `/scan` / `/odom` / `/imu` / camera | 10 Hz / 50 Hz / 50 Hz / 12 Hz |
 | Achieved / commanded velocity (forward, sideways, turning) | 1.00 / 1.00 / 1.00 |
 | Single goals in 6 rooms (MPPI / vendor DWB) | 6/6 / 5/6 |
-| Final position error, true pose (MPPI) | 0.11 m mean, 0.18 m max |
-| Waypoint missions | 14/14 (`waypoints.yaml`, 2 laps), 14/14 (`waypoints_extended.yaml`, 56.6 m) |
+| Waypoint missions | 7/7 (`waypoints.yaml`, 34 m), 14/14 (`waypoints_extended.yaml`, 58.5 m) |
+| Final position error, true pose (single goals / waypoints) | 0.11 m / 0.12 m mean |
 | Realism mode: odometry drift after a 1 m square (wheels / EKF) | 1.8 cm, 3.0° / 0.8 cm, 1.3° |
 | Realism mode: 7-waypoint mission | 7/7, 0.17 m mean error (one run) |
+
+Logs: [`results/nav_runs/`](results/nav_runs/), one CSV per run, one row per goal.
 
 | Gazebo close-up | SLAM in RViz |
 |---|---|
@@ -179,7 +186,8 @@ src/simulations/            Hiwonder ROSOrin Pro simulation, unmodified
 src/rosorin_gazebo_plugins/ traction-limited drive (Gazebo system plugin, C++)
 src/rosorin_navigation/     this project: launch files, fixed robot model, world, Nav2/EKF config,
                             waypoint_follower, realism nodes (wheel_odometry, scan_noise), tests
-tools/                      motion, collision and physics probes against Gazebo ground truth
+tools/                      motion, collision and physics probes against Gazebo ground truth;
+                            demo/: scripts that recorded the demo video
 maps/  results/             saved maps, navigation run logs
 report/  docs/              report; environment setup, debug log, images
 ```
